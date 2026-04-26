@@ -308,9 +308,18 @@ input[type=range]::-webkit-slider-thumb:hover { background: #5d9fff; }
         <span class="slider-sw"></span>
       </label>
     </div>
-    <button id="clearPenBtn" style="display:none;width:100%;margin-bottom:10px;padding:7px 0;
-      background:rgba(60,110,255,0.12);border:1px solid rgba(80,140,255,0.3);border-radius:7px;
-      color:#80b8ff;font-size:12px;cursor:pointer">Clear Drawing</button>
+    <div id="penControls" style="display:none">
+      <div class="ctrl" style="margin-bottom:8px">
+        <div class="ctrl-row">
+          <span class="ctrl-name">Brush Size</span>
+          <span class="ctrl-val" id="v_brushR">55</span>
+        </div>
+        <input type="range" id="brushSize" min="10" max="120" step="1" value="55">
+      </div>
+      <button id="clearPenBtn" style="width:100%;margin-bottom:10px;padding:7px 0;
+        background:rgba(60,110,255,0.12);border:1px solid rgba(80,140,255,0.3);border-radius:7px;
+        color:#80b8ff;font-size:12px;cursor:pointer">Clear Drawing</button>
+    </div>
 
     <button class="btn-primary" id="openExportBtn" style="width:100%;margin-bottom:8px">Export Video (30s)</button>
     <label id="bgBtn" for="bgFile">Upload Background Image</label>
@@ -810,21 +819,21 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 let penActive = false, penDrawing = false, lastPX = 0, lastPY = 0;
-const BRUSH_R = 55;
+let brushR = 55;
 
 function paintBrush(x, y, px, py) {
   const dist  = Math.hypot(x - px, y - py);
-  const steps = Math.max(1, Math.ceil(dist / (BRUSH_R * 0.25)));
+  const steps = Math.max(1, Math.ceil(dist / (brushR * 0.25)));
   for (let i = 0; i <= steps; i++) {
     const t  = i / steps;
     const bx = px + (x - px) * t;
     const by = py + (y - py) * t;
-    const g  = drawCtx.createRadialGradient(bx, by, 0, bx, by, BRUSH_R);
+    const g  = drawCtx.createRadialGradient(bx, by, 0, bx, by, brushR);
     g.addColorStop(0,    'rgba(255,255,255,0.40)');
     g.addColorStop(0.5,  'rgba(255,255,255,0.15)');
     g.addColorStop(1,    'rgba(255,255,255,0)');
     drawCtx.fillStyle = g;
-    drawCtx.fillRect(bx - BRUSH_R, by - BRUSH_R, BRUSH_R * 2, BRUSH_R * 2);
+    drawCtx.fillRect(bx - brushR, by - brushR, brushR * 2, brushR * 2);
   }
 }
 
@@ -858,8 +867,13 @@ canvas.addEventListener('touchend', () => { penDrawing = false; });
 
 document.getElementById('penToggle').addEventListener('change', e => {
   penActive = e.target.checked;
-  document.getElementById('clearPenBtn').style.display = penActive ? '' : 'none';
+  document.getElementById('penControls').style.display = penActive ? '' : 'none';
   canvas.style.cursor = penActive ? 'crosshair' : '';
+});
+
+document.getElementById('brushSize').addEventListener('input', e => {
+  brushR = parseInt(e.target.value);
+  document.getElementById('v_brushR').textContent = brushR;
 });
 
 document.getElementById('clearPenBtn').addEventListener('click', () => {
