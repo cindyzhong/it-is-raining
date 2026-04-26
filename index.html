@@ -92,13 +92,13 @@
           <i data-lucide="pen-line" class="toggle-icon"></i>
           <span data-i18n="magic-pen"></span>
         </span>
-        <label class="switch"><input type="checkbox" id="penToggle"><span class="slider-sw"></span></label>
+        <label class="switch"><input type="checkbox" id="penToggle" checked><span class="slider-sw"></span></label>
       </div>
-      <div id="penControls" style="display:none">
+      <div id="penControls" style="display:block">
         <div class="crow" style="margin-top:6px">
           <div class="cicon-wrap" data-i18n="brush-size"><i data-lucide="paintbrush" class="cicon"></i></div>
-          <input type="range" id="brushSize" min="0" max="1" step="0.01" value="0.41">
-          <span class="cval" id="v_brushR">0.4</span>
+          <input type="range" id="brushSize" min="0" max="1" step="0.01" value="0.20">
+          <span class="cval" id="v_brushR">0.2</span>
         </div>
         <button id="clearPenBtn" data-i18n="btn-clear"></button>
       </div>
@@ -623,8 +623,8 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-let penActive = false, penDrawing = false, lastPX = 0, lastPY = 0;
-let brushR = 55;
+let penActive = true, penDrawing = false, lastPX = 0, lastPY = 0;
+let brushR = 32;
 
 function paintBrush(x, y, px, py) {
   const dist  = Math.hypot(x - px, y - py);
