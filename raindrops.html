@@ -1098,13 +1098,29 @@ async function startExport() {
     a.href = url; a.download = filename; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 10000);
     
-    // Cleanup UI
+    // Smooth transition back: Adjust startMs so T remains continuous
+    startMs = performance.now() - (fixedTime * 1000);
     isRecording = false;
-    document.getElementById('liveRecUI').style.display = 'none';
-    document.getElementById('safeArea').style.display = 'none';
-    document.getElementById('doneFilename').textContent = filename;
-    showPanel('recDone');
-    document.getElementById('exportOverlay').classList.add('open');
+
+    // UI Feedback: Show "Saved" briefly in the top bar
+    const clock = document.getElementById('liveRecTime');
+    const stopBtn = document.getElementById('stopRecBtn');
+    const dot = document.querySelector('.live-rec-dot');
+    
+    if (dot) dot.style.display = 'none';
+    if (stopBtn) stopBtn.style.display = 'none';
+    clock.textContent = '✅ Export Saved';
+    clock.style.color = '#4ade80';
+
+    setTimeout(() => {
+      document.getElementById('liveRecUI').style.display = 'none';
+      document.getElementById('safeArea').style.display = 'none';
+      // Reset for next time
+      if (dot) dot.style.display = '';
+      if (stopBtn) stopBtn.style.display = '';
+      clock.style.color = '';
+    }, 3000);
+
     activeRecorder = null;
   };
 
