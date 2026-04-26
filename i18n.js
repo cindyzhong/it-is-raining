@@ -3,7 +3,6 @@ const I18N = {
 
   'tab-rain':        { zh: '雨', en: 'Rain' },
   'tab-visual':      { zh: '画', en: 'View' },
-  'tab-extras':      { zh: '杂', en: 'Misc' },
 
   'rain-speed':      { zh: '速度', en: 'Speed' },
   'static-density':  { zh: '静止密度', en: 'Static Density' },

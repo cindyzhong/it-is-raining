@@ -23,7 +23,6 @@
     <div id="tabBar">
       <button class="tab active" data-tab="rain" data-i18n="tab-rain"></button>
       <button class="tab" data-tab="visual" data-i18n="tab-visual"></button>
-      <button class="tab" data-tab="extras" data-i18n="tab-extras"></button>
     </div>
 
     <!-- Tab 1: Rain -->
@@ -53,6 +52,13 @@
         <input type="range" id="rSize" min="0" max="1" step="0.01" value="0.32">
         <span class="cval" id="v_rSize">0.3</span>
       </div>
+      <div class="sep"></div>
+      <div class="crow">
+        <div class="cicon-wrap" data-i18n="volume"><i data-lucide="volume-2" class="cicon"></i></div>
+        <input type="range" id="audioVol" min="0" max="1" step="0.01" value="0.5">
+        <span class="cval" id="v_vol">0.50</span>
+      </div>
+      <button id="muteBtn" data-i18n="btn-mute"></button>
       <div class="sep"></div>
       <div class="toggle-row">
         <span class="toggle-name">
@@ -96,16 +102,6 @@
         </div>
         <button id="clearPenBtn" data-i18n="btn-clear"></button>
       </div>
-    </div>
-
-    <!-- Tab 3: Extras -->
-    <div class="tab-pane hidden" id="tab-extras">
-      <div class="crow">
-        <div class="cicon-wrap" data-i18n="volume"><i data-lucide="volume-2" class="cicon"></i></div>
-        <input type="range" id="audioVol" min="0" max="1" step="0.01" value="0.5">
-        <span class="cval" id="v_vol">0.50</span>
-      </div>
-      <button id="muteBtn" data-i18n="btn-mute"></button>
       <div class="sep"></div>
       <div class="section-label" data-i18n="ai-scene"></div>
       <textarea id="sceneInput" placeholder="例：霓虹灯下的东京街道，夜雨…"></textarea>
