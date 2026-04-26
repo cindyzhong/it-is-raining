@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Local IDE/Tooling
+.claude/
+.vscode/
+.idea/
+
+# Environment / Secrets
+.env
+*.local.json
