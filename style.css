@@ -262,43 +262,58 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
 #exportOverlay.open { display: flex; }
 
 #exportBox {
-  width: 340px; background: rgba(10, 13, 28, 0.97);
-  border: 1px solid rgba(100,160,255,0.22); border-radius: 16px;
-  padding: 26px 24px; color: #d4e4ff;
+  width: 340px; 
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6); 
+  border-radius: 28px;
+  padding: 26px 24px; color: rgba(0, 0, 0, 0.75);
   font-family: system-ui, -apple-system, sans-serif;
-  box-shadow: 0 24px 60px rgba(0,0,40,0.7);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
 }
-#exportBox h2 { font-size: 16px; font-weight: 700; color: #90c0ff; margin-bottom: 6px; }
-#exportBox .sub { font-size: 12px; color: rgba(150,190,255,0.55); margin-bottom: 20px; }
+#exportBox h2 { 
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 20px; font-weight: 400; color: rgba(0,0,0,0.85); margin-bottom: 6px; 
+}
+#exportBox .sub { font-size: 12px; color: rgba(0,0,0,0.4); margin-bottom: 20px; }
 
 .fmt-cards { display: flex; gap: 10px; margin-bottom: 22px; }
 .fmt-card {
-  flex: 1; padding: 14px 10px; border-radius: 11px; cursor: pointer;
-  border: 1.5px solid rgba(100,160,255,0.2);
-  background: rgba(255,255,255,0.04); text-align: center;
-  transition: border-color .2s, background .2s;
+  flex: 1; padding: 14px 10px; border-radius: 18px; cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.4); text-align: center;
+  transition: all .2s;
 }
-.fmt-card:hover { border-color: rgba(100,160,255,0.5); background: rgba(60,110,255,0.1); }
-.fmt-card.selected { border-color: #4d8fff; background: rgba(60,110,255,0.18); }
-.fmt-icon { font-size: 28px; margin-bottom: 8px; line-height: 1; }
-.fmt-name { font-size: 13px; font-weight: 600; color: #c0d8ff; margin-bottom: 3px; }
-.fmt-dims { font-size: 11px; color: rgba(130,170,255,0.6); }
+.fmt-card:hover { border-color: rgba(0,0,0,0.15); background: rgba(255,255,255,0.7); }
+.fmt-card.selected { 
+  border-color: #FFB7C5; background: rgba(255, 255, 255, 0.85); 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.fmt-icon { font-size: 28px; margin-bottom: 8px; line-height: 1; opacity: 0.85; }
+.fmt-name { 
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-size: 14px; color: rgba(0,0,0,0.75); margin-bottom: 3px; 
+}
+.fmt-dims { font-size: 11px; color: rgba(0,0,0,0.35); }
 
 .export-actions { display: flex; gap: 9px; }
 .btn-primary {
-  flex: 1; padding: 10px 0; border-radius: 8px; border: none;
-  background: #2a2a2a; color: #fff; font-size: 13px;
-  font-weight: 600; cursor: pointer; transition: background .2s;
+  flex: 1; padding: 12px 0; border-radius: 14px; border: none;
+  background: #FFB7C5; color: #fff; font-size: 13px;
+  font-family: 'ZCOOL KuaiLe', cursive;
+  font-weight: 400; cursor: pointer; transition: background .2s;
+  box-shadow: 0 4px 10px rgba(255, 183, 197, 0.4);
 }
-.btn-primary:hover:not(:disabled) { background: #111; }
+.btn-primary:hover:not(:disabled) { background: #ff8fab; }
 .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-ghost {
-  padding: 10px 16px; border-radius: 8px;
-  border: 1px solid rgba(100,160,255,0.25);
-  background: none; color: rgba(150,190,255,0.7); font-size: 13px;
-  cursor: pointer; transition: border-color .2s;
+  padding: 10px 16px; border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: rgba(255,255,255,0.4); color: rgba(0,0,0,0.5); font-size: 13px;
+  font-family: 'ZCOOL KuaiLe', cursive;
+  cursor: pointer; transition: all .2s;
 }
-.btn-ghost:hover { border-color: rgba(100,160,255,0.5); }
+.btn-ghost:hover { border-color: rgba(0,0,0,0.2); background: rgba(255,255,255,0.7); }
 
 /* recording state */
 #recProgress { display: none; margin-bottom: 20px; }
