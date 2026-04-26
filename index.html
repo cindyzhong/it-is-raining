@@ -131,8 +131,6 @@
   </div>
 </div>
 
-<div id="fpsLabel">-- fps</div>
-
 <!-- Live Recording UI -->
 <div id="liveRecUI">
   <div class="live-rec-dot"></div>
@@ -946,9 +944,7 @@ document.addEventListener('keydown', resetIdle);
 resetIdle();
 
 // ——— Render Loop ———
-const fpsEl   = document.getElementById('fpsLabel');
 let   startMs = performance.now();
-let   frames  = 0, lastFpsMs = 0;
 
 // Recording state
 let isRecording = false;
@@ -967,13 +963,6 @@ function frame(now) {
     T = fixedTime;
   } else {
     T = (now - startMs) / 1000;
-  }
-
-  // FPS counter
-  frames++;
-  if (now - lastFpsMs >= 1000) {
-    fpsEl.textContent = frames + ' fps';
-    frames = 0; lastFpsMs = now;
   }
 
   gl.useProgram(prog);
