@@ -127,6 +127,7 @@
         <i data-lucide="film" class="footer-icon"></i> <span data-i18n="btn-export"></span>
       </button>
     </div>
+    <div style="text-align:center; font-size:10px; padding-bottom:12px; opacity:0.3; font-family:system-ui;">Made by @cindyzhong</div>
   </div>
 </div>
 
@@ -1145,6 +1146,16 @@ async function startExport() {
 
 function stopRecordingManually() {
   if (activeRecorder && activeRecorder.state === 'recording') {
+    activeRecorder.stop();
+    clearInterval(countdownTimer);
+  }
+}
+
+
+</script>
+</body>
+</html>
+recording') {
     activeRecorder.stop();
     clearInterval(countdownTimer);
   }

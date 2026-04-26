@@ -1,5 +1,5 @@
 const I18N = {
-  'panel-title':     { zh: '下雨了', en: 'It\'s Raining' },
+  'panel-title':     { zh: '下雨了 🌧', en: 'It\'s Raining 🌧' },
 
   'tab-rain':        { zh: '雨', en: 'Rain' },
   'tab-visual':      { zh: '画', en: 'View' },
