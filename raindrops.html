@@ -301,6 +301,26 @@ input[type=range]::-webkit-slider-thumb:hover { background: #111; }
       </label>
     </div>
 
+    <div class="toggle-row">
+      <span class="toggle-name">Magic Pen</span>
+      <label class="switch">
+        <input type="checkbox" id="penToggle">
+        <span class="slider-sw"></span>
+      </label>
+    </div>
+    <div id="penControls" style="display:none">
+      <div class="ctrl" style="margin-bottom:8px">
+        <div class="ctrl-row">
+          <span class="ctrl-name">Brush Size</span>
+          <span class="ctrl-val" id="v_brushR">55</span>
+        </div>
+        <input type="range" id="brushSize" min="10" max="120" step="1" value="55">
+      </div>
+      <button id="clearPenBtn" style="width:100%;margin-bottom:10px;padding:7px 0;
+        background:rgba(60,110,255,0.12);border:1px solid rgba(80,140,255,0.3);border-radius:7px;
+        color:#80b8ff;font-size:12px;cursor:pointer">Clear Drawing</button>
+    </div>
+
     <button class="btn-primary" id="openExportBtn" style="width:100%;margin-bottom:8px">Export Video (30s)</button>
     <label id="bgBtn" for="bgFile">Upload Background Image</label>
     <input type="file" id="bgFile" accept="image/*">
@@ -410,6 +430,7 @@ precision highp float;
 uniform float uTime;
 uniform vec2  uResolution;
 uniform sampler2D uChannel0;
+uniform sampler2D uDrawMask;
 
 uniform float uRainSpeed;
 uniform float uStaticDens;
@@ -641,15 +662,24 @@ void main() {
   vec2  N     = sH.yz + rH.yz + rH2.yz;
   float trail = max(rH.w, rH2.w);
 
+  // Magic pen: drawn areas clear drops and reveal sharp background
+  float wipe = smoothstep(0.0, 0.5, texture(uDrawMask, gUV).a);
+  H     *= 1.0 - wipe;
+  N     *= 1.0 - wipe;
+  trail *= 1.0 - wipe;
+
   vec2  rn  = H > 0.0 ? -N*uRefract : vec2(0.0);
   float ecs = H > 0.0 ? pow(smoothstep(0.2,0.0,length(rn)), 0.5)*0.2+0.8 : 1.0;
   float blur = H > 0.0
     ? mix(minBlur, maxBlur, smoothstep(0.0,1.6,length(rn)))
     : maxBlur;
   blur = propMap(minBlur, blur, 1.0 - trail);
+  blur = mix(blur, 0.0, wipe);
   ecs  = pow(ecs, 0.85);
 
   vec3 col = textureLod(uChannel0, gUV + rn, blur).rgb * ecs;
+  // Subtle edge shimmer at wipe boundary
+  col += wipe * (1.0 - wipe) * 4.0 * 0.06;
   fragColor = vec4(col, 1.0);
 }
 `;
@@ -695,7 +725,7 @@ gl.vertexAttribPointer(aPosLoc, 2, gl.FLOAT, false, 0, 0);
 
 // ——— Uniforms ———
 const uLoc = {};
-['uTime','uResolution','uChannel0','uRainSpeed','uStaticDens','uRollingDens',
+['uTime','uResolution','uChannel0','uDrawMask','uRainSpeed','uStaticDens','uRollingDens',
  'uStaticScale','uRollingScale','uRaindropBlur','uBgBlur','uRefract','uLayer2'
 ].forEach(u => { uLoc[u] = gl.getUniformLocation(prog, u); });
 
@@ -792,6 +822,82 @@ bgTex = buildDefaultBg();
   img.onload = () => uploadTexture(img);
   img.src = url;
 })();
+
+// ——— Magic Pen Draw Layer ———
+const drawCanvas = document.createElement('canvas');
+drawCanvas.width  = canvas.width;
+drawCanvas.height = canvas.height;
+const drawCtx = drawCanvas.getContext('2d');
+
+const drawTex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, drawTex);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0,0,0,0]));
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+let penActive = false, penDrawing = false, lastPX = 0, lastPY = 0;
+let brushR = 55;
+
+function paintBrush(x, y, px, py) {
+  const dist  = Math.hypot(x - px, y - py);
+  const steps = Math.max(1, Math.ceil(dist / (brushR * 0.25)));
+  for (let i = 0; i <= steps; i++) {
+    const t  = i / steps;
+    const bx = px + (x - px) * t;
+    const by = py + (y - py) * t;
+    const g  = drawCtx.createRadialGradient(bx, by, 0, bx, by, brushR);
+    g.addColorStop(0,    'rgba(255,255,255,0.40)');
+    g.addColorStop(0.5,  'rgba(255,255,255,0.15)');
+    g.addColorStop(1,    'rgba(255,255,255,0)');
+    drawCtx.fillStyle = g;
+    drawCtx.fillRect(bx - brushR, by - brushR, brushR * 2, brushR * 2);
+  }
+}
+
+canvas.addEventListener('mousedown', e => {
+  if (!penActive) return;
+  penDrawing = true; lastPX = e.clientX; lastPY = e.clientY;
+  paintBrush(e.clientX, e.clientY, e.clientX, e.clientY);
+});
+canvas.addEventListener('mousemove', e => {
+  if (!penActive || !penDrawing) return;
+  paintBrush(e.clientX, e.clientY, lastPX, lastPY);
+  lastPX = e.clientX; lastPY = e.clientY;
+});
+canvas.addEventListener('mouseup',    () => { penDrawing = false; });
+canvas.addEventListener('mouseleave', () => { penDrawing = false; });
+
+canvas.addEventListener('touchstart', e => {
+  if (!penActive) return;
+  e.preventDefault(); penDrawing = true;
+  const t = e.touches[0]; lastPX = t.clientX; lastPY = t.clientY;
+  paintBrush(t.clientX, t.clientY, t.clientX, t.clientY);
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  if (!penActive || !penDrawing) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  paintBrush(t.clientX, t.clientY, lastPX, lastPY);
+  lastPX = t.clientX; lastPY = t.clientY;
+}, { passive: false });
+canvas.addEventListener('touchend', () => { penDrawing = false; });
+
+document.getElementById('penToggle').addEventListener('change', e => {
+  penActive = e.target.checked;
+  document.getElementById('penControls').style.display = penActive ? '' : 'none';
+  canvas.style.cursor = penActive ? 'crosshair' : '';
+});
+
+document.getElementById('brushSize').addEventListener('input', e => {
+  brushR = parseInt(e.target.value);
+  document.getElementById('v_brushR').textContent = brushR;
+});
+
+document.getElementById('clearPenBtn').addEventListener('click', () => {
+  drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+});
 
 // ——— Parameters ———
 const params = {
@@ -1060,6 +1166,13 @@ function frame(now) {
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, bgTex);
   gl.uniform1i(uLoc.uChannel0, 0);
+
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, drawTex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, drawCanvas);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  gl.uniform1i(uLoc.uDrawMask, 1);
 
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   requestAnimationFrame(frame);
