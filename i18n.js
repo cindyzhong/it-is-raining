@@ -15,8 +15,8 @@ const I18N = {
   'volume':          { zh: '音量', en: 'Volume' },
   'brush-size':      { zh: '笔触', en: 'Brush' },
 
-  'double-layer':    { zh: '双层', en: 'Double' },
-  'magic-pen':       { zh: '画笔', en: 'Pen' },
+  'double-layer':    { zh: '双层雨', en: 'Double Layer' },
+  'magic-pen':       { zh: '呼气在玻璃上', en: 'Breath' },
 
   'ai-scene':        { zh: 'AI 生成', en: 'AI Gen' },
   'btn-clear':       { zh: '清除 Clear', en: '' },
