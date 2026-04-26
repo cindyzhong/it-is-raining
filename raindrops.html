@@ -306,6 +306,19 @@ input[type=range]::-webkit-slider-thumb:hover { background: #5d9fff; }
     <input type="file" id="bgFile" accept="image/*">
 
     <div class="sep"></div>
+    <div class="section-label">Audio</div>
+
+    <div class="ctrl">
+      <div class="ctrl-row">
+        <span class="ctrl-name">Volume</span>
+        <span class="ctrl-val" id="v_vol">0.50</span>
+      </div>
+      <input type="range" id="audioVol" min="0" max="1" step="0.01" value="0.5">
+    </div>
+
+    <button class="btn-ghost" id="muteBtn" style="width:100%;margin-bottom:8px">Mute</button>
+
+    <div class="sep"></div>
     <div class="section-label">AI Scene Generator</div>
 
     <input type="password" id="apiKey" placeholder="Gemini API key…"
@@ -886,6 +899,120 @@ function setStatus(msg, isError) {
   genStatus.className   = isError ? 'error' : '';
 }
 
+// ——— Audio Engine ———
+let audioCtx = null, masterGain = null, rainGain = null, rainFilter = null;
+let audioMuted = false, audioStarted = false;
+let thunderTimeout = null;
+
+function initAudio() {
+  if (audioStarted) return;
+  audioStarted = true;
+  audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = parseFloat(document.getElementById('audioVol').value);
+  masterGain.connect(audioCtx.destination);
+
+  rainGain = audioCtx.createGain();
+  rainGain.connect(masterGain);
+
+  rainFilter = audioCtx.createBiquadFilter();
+  rainFilter.type = 'bandpass';
+  rainFilter.frequency.value = 600;
+  rainFilter.Q.value = 1.5;
+  rainFilter.connect(rainGain);
+
+  const bufLen   = audioCtx.sampleRate * 2;
+  const noiseBuf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+  const data     = noiseBuf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+
+  const src = audioCtx.createBufferSource();
+  src.buffer = noiseBuf;
+  src.loop   = true;
+  src.connect(rainFilter);
+  src.start();
+
+  syncAudioToRain();
+  scheduleThunder();
+}
+
+function syncAudioToRain() {
+  if (!audioCtx) return;
+  rainGain.gain.setTargetAtTime((params.speed / 3) * 0.8, audioCtx.currentTime, 0.3);
+  rainFilter.frequency.setTargetAtTime(400 + params.rDens * 500, audioCtx.currentTime, 0.3);
+}
+
+function scheduleThunder() {
+  if (!audioCtx) return;
+  clearTimeout(thunderTimeout);
+  if (params.speed === 0) { thunderTimeout = setTimeout(scheduleThunder, 5000); return; }
+  const fast = params.speed >= 2;
+  const minMs = fast ? 10000 : 25000;
+  const maxMs = fast ? 25000 : 60000;
+  thunderTimeout = setTimeout(() => { playThunder(); scheduleThunder(); },
+                               minMs + Math.random() * (maxMs - minMs));
+}
+
+function playThunder() {
+  if (!audioCtx || audioMuted) return;
+  const t      = audioCtx.currentTime;
+  const bufLen = audioCtx.sampleRate * 4;
+  const buf    = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
+  const d      = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) d[i] = Math.random() * 2 - 1;
+
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+
+  const lpf = audioCtx.createBiquadFilter();
+  lpf.type = 'lowpass';
+  lpf.frequency.value = 120;
+
+  const env = audioCtx.createGain();
+  env.gain.setValueAtTime(0.0001, t);
+  env.gain.exponentialRampToValueAtTime(0.6, t + 0.1);
+  env.gain.exponentialRampToValueAtTime(0.0001, t + 3.5);
+
+  src.connect(lpf); lpf.connect(env); env.connect(masterGain);
+  src.start(t); src.stop(t + 4);
+}
+
+// Start audio on first user gesture (browser autoplay policy)
+function onFirstInteraction() {
+  initAudio();
+  document.removeEventListener('click', onFirstInteraction);
+  document.removeEventListener('input', onFirstInteraction);
+}
+document.addEventListener('click',  onFirstInteraction);
+document.addEventListener('input',  onFirstInteraction);
+
+// Sync rain sound when speed or density changes
+document.getElementById('speed').addEventListener('input', syncAudioToRain);
+document.getElementById('rDens').addEventListener('input', syncAudioToRain);
+
+// Volume slider
+document.getElementById('audioVol').addEventListener('input', () => {
+  const vol = parseFloat(document.getElementById('audioVol').value);
+  document.getElementById('v_vol').textContent = vol.toFixed(2);
+  if (masterGain) masterGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.1);
+});
+
+// Mute toggle
+const muteBtn = document.getElementById('muteBtn');
+muteBtn.addEventListener('click', () => {
+  initAudio();
+  audioMuted = !audioMuted;
+  if (audioMuted) {
+    audioCtx.suspend();
+    muteBtn.textContent = 'Unmute';
+    muteBtn.style.opacity = '0.5';
+  } else {
+    audioCtx.resume();
+    muteBtn.textContent = 'Mute';
+    muteBtn.style.opacity = '';
+  }
+});
+
 // ——— Collapse panel ———
 let collapsed = false;
 document.getElementById('panelHeader').addEventListener('click', () => {
@@ -1018,9 +1145,13 @@ async function startExport() {
   const chunks = [];
   recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
 
+  const wasAudioPlaying = audioCtx && !audioMuted && audioCtx.state === 'running';
+  if (wasAudioPlaying) audioCtx.suspend();
+
   recorder.onstop = () => {
     clearInterval(countdownTimer);
     doRestore();
+    if (wasAudioPlaying) audioCtx.resume();
 
     const blob     = new Blob(chunks, { type: chosen.mime });
     const url      = URL.createObjectURL(blob);
