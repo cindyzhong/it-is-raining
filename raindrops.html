@@ -21,40 +21,35 @@
   <div id="panelBody">
     <!-- Tab bar -->
     <div id="tabBar">
-      <button class="tab active" data-tab="rain">雨滴</button>
-      <button class="tab" data-tab="visual">画面</button>
-      <button class="tab" data-tab="extras">其它</button>
+      <button class="tab active" data-tab="rain" data-i18n="tab-rain"></button>
+      <button class="tab" data-tab="visual" data-i18n="tab-visual"></button>
+      <button class="tab" data-tab="extras" data-i18n="tab-extras"></button>
     </div>
 
     <!-- Tab 1: Rain -->
     <div class="tab-pane" id="tab-rain">
       <div class="crow">
-        <i data-lucide="wind" class="cicon"></i>
-        <span class="clabel">速度<span class="en-label">Rain Speed</span></span>
+        <div class="cicon-wrap" data-i18n="rain-speed"><i data-lucide="wind" class="cicon"></i></div>
         <input type="range" id="speed" min="0" max="1" step="0.01" value="0.33">
         <span class="cval" id="v_speed">0.3</span>
       </div>
       <div class="crow">
-        <i data-lucide="droplets" class="cicon"></i>
-        <span class="clabel">静止密度<span class="en-label">Static Density</span></span>
+        <div class="cicon-wrap" data-i18n="static-density"><i data-lucide="droplets" class="cicon"></i></div>
         <input type="range" id="sDens" min="0" max="1" step="0.01" value="0.35">
         <span class="cval" id="v_sDens">0.4</span>
       </div>
       <div class="crow">
-        <i data-lucide="droplet" class="cicon"></i>
-        <span class="clabel">滚动密度<span class="en-label">Rolling Density</span></span>
+        <div class="cicon-wrap" data-i18n="rolling-density"><i data-lucide="droplet" class="cicon"></i></div>
         <input type="range" id="rDens" min="0" max="1" step="0.01" value="0.35">
         <span class="cval" id="v_rDens">0.4</span>
       </div>
       <div class="crow">
-        <i data-lucide="circle" class="cicon"></i>
-        <span class="clabel">静止大小<span class="en-label">Static Size</span></span>
+        <div class="cicon-wrap" data-i18n="static-size"><i data-lucide="circle" class="cicon"></i></div>
         <input type="range" id="sSize" min="0" max="1" step="0.01" value="0.33">
         <span class="cval" id="v_sSize">0.3</span>
       </div>
       <div class="crow">
-        <i data-lucide="focus" class="cicon"></i>
-        <span class="clabel">滚动大小<span class="en-label">Rolling Size</span></span>
+        <div class="cicon-wrap" data-i18n="rolling-size"><i data-lucide="focus" class="cicon"></i></div>
         <input type="range" id="rSize" min="0" max="1" step="0.01" value="0.32">
         <span class="cval" id="v_rSize">0.3</span>
       </div>
@@ -62,7 +57,7 @@
       <div class="toggle-row">
         <span class="toggle-name">
           <i data-lucide="layers" class="toggle-icon"></i>
-          <span>双层雨效<span class="en-label">Double Layer</span></span>
+          <span data-i18n="double-layer"></span>
         </span>
         <label class="switch"><input type="checkbox" id="layer2"><span class="slider-sw"></span></label>
       </div>
@@ -71,20 +66,17 @@
     <!-- Tab 2: Visual -->
     <div class="tab-pane hidden" id="tab-visual">
       <div class="crow">
-        <i data-lucide="zap" class="cicon"></i>
-        <span class="clabel">镜头折射<span class="en-label">Refraction</span></span>
+        <div class="cicon-wrap" data-i18n="lens-refraction"><i data-lucide="zap" class="cicon"></i></div>
         <input type="range" id="refract" min="0" max="1" step="0.01" value="0.30">
         <span class="cval" id="v_refract">0.3</span>
       </div>
       <div class="crow">
-        <i data-lucide="cloud" class="cicon"></i>
-        <span class="clabel">背景模糊<span class="en-label">BG Blur</span></span>
+        <div class="cicon-wrap" data-i18n="bg-blur"><i data-lucide="cloud" class="cicon"></i></div>
         <input type="range" id="bgBlur" min="0" max="1" step="0.01" value="0.29">
         <span class="cval" id="v_bgBlur">0.3</span>
       </div>
       <div class="crow">
-        <i data-lucide="eye" class="cicon"></i>
-        <span class="clabel">水滴模糊<span class="en-label">Drop Blur</span></span>
+        <div class="cicon-wrap" data-i18n="drop-blur"><i data-lucide="eye" class="cicon"></i></div>
         <input type="range" id="dBlur" min="0" max="1" step="0.01" value="0">
         <span class="cval" id="v_dBlur">0.0</span>
       </div>
@@ -92,14 +84,13 @@
       <div class="toggle-row">
         <span class="toggle-name">
           <i data-lucide="pen-line" class="toggle-icon"></i>
-          <span>魔法画笔<span class="en-label">Magic Pen</span></span>
+          <span data-i18n="magic-pen"></span>
         </span>
         <label class="switch"><input type="checkbox" id="penToggle"><span class="slider-sw"></span></label>
       </div>
       <div id="penControls" style="display:none">
         <div class="crow" style="margin-top:6px">
-          <i data-lucide="paintbrush" class="cicon"></i>
-          <span class="clabel">画笔大小<span class="en-label">Brush Size</span></span>
+          <div class="cicon-wrap" data-i18n="brush-size"><i data-lucide="paintbrush" class="cicon"></i></div>
           <input type="range" id="brushSize" min="0" max="1" step="0.01" value="0.41">
           <span class="cval" id="v_brushR">0.4</span>
         </div>
@@ -110,8 +101,7 @@
     <!-- Tab 3: Extras -->
     <div class="tab-pane hidden" id="tab-extras">
       <div class="crow">
-        <i data-lucide="volume-2" class="cicon"></i>
-        <span class="clabel">音量<span class="en-label">Volume</span></span>
+        <div class="cicon-wrap" data-i18n="volume"><i data-lucide="volume-2" class="cicon"></i></div>
         <input type="range" id="audioVol" min="0" max="1" step="0.01" value="0.5">
         <span class="cval" id="v_vol">0.50</span>
       </div>
@@ -134,11 +124,11 @@
     <!-- Footer: always visible -->
     <div id="panelFooter">
       <label class="footer-btn" for="bgFile">
-        <i data-lucide="image" class="footer-icon"></i> 上传背景
+        <i data-lucide="image" class="footer-icon"></i> <span data-i18n="btn-upload"></span>
       </label>
       <input type="file" id="bgFile" accept="image/*">
       <button class="footer-btn" id="openExportBtn" onclick="openExport()">
-        <i data-lucide="film" class="footer-icon"></i> 导出视频
+        <i data-lucide="film" class="footer-icon"></i> <span data-i18n="btn-export"></span>
       </button>
     </div>
   </div>
