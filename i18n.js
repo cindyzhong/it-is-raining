@@ -16,7 +16,7 @@ const I18N = {
   'brush-size':      { zh: '笔触', en: 'Brush' },
 
   'double-layer':    { zh: '双层雨', en: 'Double Layer' },
-  'magic-pen':       { zh: '呼气在玻璃上', en: 'Breath' },
+  'magic-pen':       { zh: '呼气在玻璃上面', en: 'Draw' },
 
   'ai-scene':        { zh: 'AI 生成', en: 'AI Gen' },
   'btn-clear':       { zh: '清除 Clear', en: '' },
