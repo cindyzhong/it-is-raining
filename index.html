@@ -106,7 +106,7 @@
 
 <footer class="sasa-footer">
     <div class="footer-content">
-        Made with <span class="heart-icon">❤️</span> by Sasa
+        Made with <span class="heart-icon">♡</span> by Sasa
     </div>
     <div class="footer-dedication">
         For those who love rain, love peace, and art.
@@ -120,32 +120,34 @@
     width: 100%;
     text-align: center;
     z-index: 100;
-    font-family: 'Quicksand', 'Segoe UI', sans-serif;
+    font-family: 'ZCOOL KuaiLe', cursive, sans-serif;
     pointer-events: none;
 }
 .footer-content {
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 14px;
-    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 15px;
     letter-spacing: 1px;
-    margin-bottom: 5px;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 4px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 .footer-dedication {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.4);
     font-size: 11px;
     font-style: italic;
     letter-spacing: 0.5px;
+    font-family: system-ui, -apple-system, sans-serif; /* Keep English subtext clean */
 }
 .heart-icon {
-    color: #ff8fa3;
+    color: rgba(255, 255, 255, 0.8);
     display: inline-block;
-    animation: heartbeat 2s infinite;
+    animation: heartbeat 2.4s ease-in-out infinite;
+    font-style: normal;
+    margin: 0 2px;
 }
 @keyframes heartbeat {
-    0% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(1); opacity: 0.8; }
+    0% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.15); opacity: 0.9; }
+    100% { transform: scale(1); opacity: 0.6; }
 }
 </style>
 
