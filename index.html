@@ -1040,6 +1040,22 @@ function frame(now) {
       sw = srcW; sh = srcW / dstAR; sx = 0; sy = (srcH - sh) / 2;
     }
     expCtx.drawImage(canvas, sx, sy, sw, sh, 0, 0, recW, recH);
+
+    // Footer overlay
+    const fSize   = Math.round(Math.min(recW, recH) / 40);
+    const subSize = Math.round(fSize * 0.65);
+    expCtx.save();
+    expCtx.textAlign = 'center';
+    expCtx.font        = `${fSize}px 'ZCOOL KuaiLe', cursive, sans-serif`;
+    expCtx.fillStyle   = 'rgba(255, 255, 255, 0.7)';
+    expCtx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    expCtx.shadowBlur  = 6;
+    expCtx.fillText('Made with ♡ by Sasa', recW / 2, recH - fSize * 3);
+    expCtx.font        = `italic ${subSize}px system-ui, -apple-system, sans-serif`;
+    expCtx.fillStyle   = 'rgba(255, 255, 255, 0.4)';
+    expCtx.shadowBlur  = 0;
+    expCtx.fillText('For those who love rain, peace, and art.', recW / 2, recH - fSize * 1.5);
+    expCtx.restore();
   }
 
   requestAnimationFrame(frame);
