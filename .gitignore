@@ -9,3 +9,4 @@
 # Environment / Secrets
 .env
 *.local.json
+claude.md
