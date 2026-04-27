@@ -628,6 +628,14 @@ bgTex = buildDefaultBg();
 }
 
 // 2. Auto-generate a location + time-of-day scene and replace the rainforest if it loads
+function getImgSize() {
+  const sw = window.innerWidth, sh = window.innerHeight;
+  const scale = 1024 / Math.max(sw, sh);
+  const w = Math.round(sw * scale / 32) * 32;
+  const h = Math.round(sh * scale / 32) * 32;
+  return { w: Math.max(w, 32), h: Math.max(h, 32) };
+}
+
 function getCityFromTimezone() {
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -653,7 +661,8 @@ function autoGenerateBg() {
   const timer = setTimeout(() => { img.src = ''; }, 15000);
   img.onload  = () => { clearTimeout(timer); uploadTexture(img); };
   img.onerror = () => { clearTimeout(timer); };
-  img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&model=flux-realism&seed=${Date.now() % 999999}&nologo=true`;
+  const { w, h } = getImgSize();
+  img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${w}&height=${h}&model=flux-realism&seed=${Date.now() % 999999}&nologo=true`;
 }
 
 autoGenerateBg();
@@ -803,8 +812,9 @@ async function generateScene() {
   const fullPrompt = prompt +
     ', cinematic photography, wide angle, high detail, vivid colors, no text, no watermark';
 
+  const { w: imgW, h: imgH } = getImgSize();
   const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}` +
-    `?width=1024&height=1024&model=${model}&seed=${seed}&nologo=true`;
+    `?width=${imgW}&height=${imgH}&model=${model}&seed=${seed}&nologo=true`;
 
   setStatus('', false);
   setGenerating(true);
