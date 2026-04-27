@@ -615,47 +615,44 @@ function uploadTexture(source) {
 
 bgTex = buildDefaultBg();
 
-// ——— Auto Background Generation ———
+// ——— Background Loading ———
 
-function loadRainforestFallback() {
+// 1. Load rainforest immediately — fixed seed so Pollinations serves it from cache (fast)
+{
   const img = new Image();
+  img.crossOrigin = 'anonymous';
   img.onload = () => uploadTexture(img);
-  img.src = 'default-bg.avif';
+  img.src = 'https://image.pollinations.ai/prompt/' +
+    encodeURIComponent('dense tropical rainforest, lush green canopy, misty rain, cinematic wide angle, vivid colors, no text') +
+    '?width=1024&height=1024&model=flux-realism&seed=42&nologo=true';
 }
 
+// 2. Auto-generate a location + time-of-day scene and replace the rainforest if it loads
 function getCityFromTimezone() {
   try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // e.g. "America/Toronto"
-    const city = tz.split('/').pop().replace(/_/g, ' ');         // "Toronto"
-    return city || null;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return tz.split('/').pop().replace(/_/g, ' ') || null;
   } catch(e) { return null; }
 }
 
-function getTimePeriod(hour) {
-  if (hour >= 5  && hour < 11) return 'early morning, sunrise mist, soft light';
-  if (hour >= 11 && hour < 17) return 'afternoon, overcast sky, diffused light';
-  if (hour >= 17 && hour < 20) return 'golden hour sunset, warm orange glow';
-  return 'night, city lights glowing, neon reflections, bokeh';
+function getScenePrompt(city, hour) {
+  if (hour >= 5  && hour < 11) return `${city}, early morning, soft sunrise light, misty atmosphere, serene, cinematic wide angle, photorealistic`;
+  if (hour >= 11 && hour < 17) return `${city}, afternoon, natural daylight, open sky, peaceful scene, cinematic wide angle, photorealistic`;
+  if (hour >= 17 && hour < 20) return `${city}, golden hour sunset, warm light, beautiful sky, cinematic wide angle, photorealistic`;
+  return `${city}, nighttime, ambient mood lighting, quiet atmosphere, cinematic wide angle, photorealistic`;
 }
 
 function autoGenerateBg() {
   const city = getCityFromTimezone();
-  if (!city) { loadRainforestFallback(); return; }
+  if (!city) return;
 
-  const hour   = new Date().getHours();
-  const period = getTimePeriod(hour);
-  const prompt = `${city} street scene in the rain, ${period}, wet roads, cinematic photography, wide angle, photorealistic, no text, no watermark`;
-
-  const img = new Image();
+  const prompt = getScenePrompt(city, new Date().getHours());
+  const img    = new Image();
   img.crossOrigin = 'anonymous';
 
-  const timer = setTimeout(() => {
-    img.src = '';
-    loadRainforestFallback(); // took too long — use rainforest
-  }, 12000);
-
-  img.onload = () => { clearTimeout(timer); uploadTexture(img); };
-  img.onerror = () => { clearTimeout(timer); loadRainforestFallback(); };
+  const timer = setTimeout(() => { img.src = ''; }, 15000);
+  img.onload  = () => { clearTimeout(timer); uploadTexture(img); };
+  img.onerror = () => { clearTimeout(timer); };
   img.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&model=flux-realism&seed=${Date.now() % 999999}&nologo=true`;
 }
 
