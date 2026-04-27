@@ -69,6 +69,23 @@ body { background: #000; overflow: hidden; }
   font-family: monospace;
 }
 
+.clabel {
+  flex-shrink: 0; width: 66px;
+  font-size: 11px; line-height: 1.25;
+  color: rgba(0,0,0,0.55);
+}
+.clabel .zh {
+  display: block;
+  font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', cursive;
+  font-size: 12px;
+}
+.clabel .en {
+  display: block;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 9px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: rgba(0,0,0,0.32);
+}
+
 /* ——— Sliders — pastel pink thumb ——— */
 input[type=range] {
   flex: 1; height: 3px; -webkit-appearance: none; appearance: none;
