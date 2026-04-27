@@ -19,14 +19,9 @@
   </div>
 
   <div id="panelBody">
-    <!-- Tab bar -->
-    <div id="tabBar">
-      <button class="tab active" data-tab="rain" data-i18n="tab-rain"></button>
-      <button class="tab" data-tab="visual" data-i18n="tab-visual"></button>
-    </div>
 
-    <!-- Tab 1: Rain -->
-    <div class="tab-pane" id="tab-rain">
+    <!-- Rain controls -->
+    <div id="tab-rain">
       <div class="crow">
         <div class="cicon-wrap" data-i18n="rain-speed"><i data-lucide="wind" class="cicon"></i></div>
         <input type="range" id="speed" min="0" max="1" step="0.01" value="0.33">
@@ -69,8 +64,8 @@
       <button id="muteBtn" data-i18n="btn-mute"></button>
     </div>
 
-    <!-- Tab 2: Visual -->
-    <div class="tab-pane hidden" id="tab-visual">
+    <!-- Visual controls -->
+    <div id="tab-visual">
       <div class="crow">
         <div class="cicon-wrap" data-i18n="lens-refraction"><i data-lucide="zap" class="cicon"></i></div>
         <input type="range" id="refract" min="0" max="1" step="0.01" value="0.30">
@@ -920,15 +915,6 @@ document.getElementById('panelHeader').addEventListener('click', () => {
   document.getElementById('collapseBtn').textContent = collapsed ? '+' : '−';
 });
 
-// ——— Tab switching ———
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
-  });
-});
 
 // ——— Auto-fade panel on idle ———
 const panelEl = document.getElementById('panel');

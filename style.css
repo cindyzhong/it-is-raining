@@ -33,23 +33,6 @@ body { background: #000; overflow: hidden; }
 }
 #collapseBtn:hover { background: rgba(0,0,0,0.1); }
 
-/* ——— Tab bar ——— */
-#tabBar {
-  display: flex; padding: 4px 10px 8px; gap: 4px;
-}
-.tab {
-  flex: 1; padding: 6px 4px; border: none;
-  background: transparent; border-radius: 14px;
-  font-size: 12px; cursor: pointer; color: rgba(0,0,0,0.45);
-  font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', cursive;
-  transition: background .18s, color .18s;
-}
-.tab:hover { background: rgba(255,255,255,0.5); color: rgba(0,0,0,0.72); }
-.tab.active {
-  background: rgba(255,255,255,0.68);
-  color: rgba(0,0,0,0.85);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.09);
-}
 
 /* ——— Panel body + scrolling ——— */
 #panelBody {
@@ -60,7 +43,6 @@ body { background: #000; overflow: hidden; }
 #panelBody::-webkit-scrollbar-track { background: transparent; }
 #panelBody::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
 
-.tab-pane.hidden { display: none; }
 
 /* ——— Compact control row ——— */
 .crow {

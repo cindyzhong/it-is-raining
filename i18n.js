@@ -1,9 +1,6 @@
 const I18N = {
   'panel-title':     { zh: '下雨了 🌧', en: 'It\'s Raining 🌧' },
 
-  'tab-rain':        { zh: '雨', en: 'Rain' },
-  'tab-visual':      { zh: '画', en: 'View' },
-
   'rain-speed':      { zh: '速度', en: 'Speed' },
   'static-density':  { zh: '静止密度', en: 'Static Density' },
   'rolling-density': { zh: '滚动密度', en: 'Rolling Density' },
