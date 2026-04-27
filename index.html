@@ -32,21 +32,6 @@
         <input type="range" id="sDens" min="0" max="1" step="0.01" value="0.35">
         <span class="cval" id="v_sDens">0.4</span>
       </div>
-      <div class="crow">
-        <div class="cicon-wrap" data-i18n="rolling-density"><i data-lucide="droplet" class="cicon"></i></div>
-        <input type="range" id="rDens" min="0" max="1" step="0.01" value="0.35">
-        <span class="cval" id="v_rDens">0.4</span>
-      </div>
-      <div class="crow">
-        <div class="cicon-wrap" data-i18n="static-size"><i data-lucide="circle" class="cicon"></i></div>
-        <input type="range" id="sSize" min="0" max="1" step="0.01" value="0.33">
-        <span class="cval" id="v_sSize">0.3</span>
-      </div>
-      <div class="crow">
-        <div class="cicon-wrap" data-i18n="rolling-size"><i data-lucide="focus" class="cicon"></i></div>
-        <input type="range" id="rSize" min="0" max="1" step="0.01" value="0.32">
-        <span class="cval" id="v_rSize">0.3</span>
-      </div>
       <div class="sep"></div>
       <div class="toggle-row">
         <span class="toggle-name">
@@ -705,9 +690,6 @@ function bindSlider(sliderId, key, valId, pMin, pMax) {
 
 bindSlider('speed',   'speed',   'v_speed',   0,   3);
 bindSlider('sDens',   'sDens',   'v_sDens',   0,   1);
-bindSlider('rDens',   'rDens',   'v_rDens',   0,   1);
-bindSlider('sSize',   'sSize',   'v_sSize',   5,   50);
-bindSlider('rSize',   'rSize',   'v_rSize',   0.5, 6);
 bindSlider('bgBlur',  'bgBlur',  'v_bgBlur',  0,   7);
 bindSlider('dBlur',   'dBlur',   'v_dBlur',   0,   3);
 bindSlider('refract', 'refract', 'v_refract', 0,   0.5);
@@ -882,7 +864,6 @@ document.addEventListener('input',  onFirstInteraction);
 
 // Sync rain sound when speed or density changes
 document.getElementById('speed').addEventListener('input', syncAudioToRain);
-document.getElementById('rDens').addEventListener('input', syncAudioToRain);
 
 // Volume slider
 document.getElementById('audioVol').addEventListener('input', () => {
