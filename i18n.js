@@ -1,5 +1,5 @@
 const I18N = {
-  'panel-title':     { zh: '下雨了 ☁️ <span class="url-sub">itisraining.com</span>', en: '下雨了 ☁️ <span class="url-sub">itisraining.com</span>' },
+  'panel-title':     { zh: '下雨了 🌧 <span class="url-sub">itisraining.com</span>', en: '下雨了 🌧 <span class="url-sub">itisraining.com</span>' },
 
   'rain-speed':      { zh: '速度', en: 'Speed' },
   'static-density':  { zh: '静止密度', en: 'Static Density' },

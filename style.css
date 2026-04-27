@@ -69,10 +69,7 @@ body { background: #000; overflow: hidden; }
 .cicon svg { width: 15px; height: 15px; }
 
 .cval {
-  font-size: 11px; color: rgba(255,255,255,0.8);
-  min-width: 32px; text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-family: monospace;
+  display: none;
 }
 
 .clabel {
