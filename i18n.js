@@ -1,5 +1,5 @@
 const I18N = {
-  'panel-title':     { zh: '下雨了 🌧', en: 'It\'s Raining 🌧' },
+  'panel-title':     { zh: '下雨了 ☁️ <span class="url-sub">itisraining.com</span>', en: '下雨了 ☁️ <span class="url-sub">itisraining.com</span>' },
 
   'rain-speed':      { zh: '速度', en: 'Speed' },
   'static-density':  { zh: '静止密度', en: 'Static Density' },
@@ -15,7 +15,7 @@ const I18N = {
   'double-layer':    { zh: '双层雨', en: 'Double Layer' },
   'magic-pen':       { zh: '画画', en: 'Draw' },
 
-  'ai-scene':        { zh: 'AI 生成', en: 'AI Gen' },
+  'ai-scene':        { zh: '生成背景', en: 'AI Background' },
   'btn-clear':       { zh: '清除 Clear', en: '' },
   'btn-mute':        { zh: '静音 Mute', en: '' },
   'btn-unmute':      { zh: '播放 Unmute', en: '' },
@@ -43,7 +43,7 @@ function applyI18n() {
     }
 
     if (el.tagName === 'H3') {
-      el.textContent = t.zh;
+      el.innerHTML = t.zh;
     } else {
       el.textContent = getLabel(key);
     }
