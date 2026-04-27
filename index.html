@@ -55,22 +55,10 @@
     <!-- Visual controls -->
     <div id="tab-visual">
       <div class="crow">
-        <div class="cicon-wrap" data-i18n="lens-refraction"><i data-lucide="zap" class="cicon"></i></div>
-        <span class="clabel"><span class="zh">折射</span><span class="en">Refract</span></span>
-        <input type="range" id="refract" min="0" max="1" step="0.01" value="0.30">
-        <span class="cval" id="v_refract">0.3</span>
-      </div>
-      <div class="crow">
         <div class="cicon-wrap" data-i18n="bg-blur"><i data-lucide="cloud" class="cicon"></i></div>
         <span class="clabel"><span class="zh">模糊</span><span class="en">Blur</span></span>
         <input type="range" id="bgBlur" min="0" max="1" step="0.01" value="0.65">
         <span class="cval" id="v_bgBlur">0.7</span>
-      </div>
-      <div class="crow">
-        <div class="cicon-wrap" data-i18n="drop-blur"><i data-lucide="eye" class="cicon"></i></div>
-        <span class="clabel"><span class="zh">焦距</span><span class="en">Focus</span></span>
-        <input type="range" id="dBlur" min="0" max="1" step="0.01" value="0">
-        <span class="cval" id="v_dBlur">0.0</span>
       </div>
       <div class="sep"></div>
       <div class="toggle-row">
@@ -698,8 +686,6 @@ function bindSlider(sliderId, key, valId, pMin, pMax) {
 bindSlider('speed',   'speed',   'v_speed',   0,   3);
 bindSlider('sDens',   'sDens',   'v_sDens',   0,   1);
 bindSlider('bgBlur',  'bgBlur',  'v_bgBlur',  0,   7);
-bindSlider('dBlur',   'dBlur',   'v_dBlur',   0,   3);
-bindSlider('refract', 'refract', 'v_refract', 0,   0.5);
 
 document.getElementById('layer2').addEventListener('change', e => {
   params.layer2 = e.target.checked ? 1.0 : 0.0;
