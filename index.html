@@ -618,13 +618,9 @@ bgTex = buildDefaultBg();
 // ——— Auto Background Generation ———
 
 function loadRainforestFallback() {
-  const prompt = encodeURIComponent(
-    'dense tropical rainforest, lush green canopy, misty rain, cinematic wide angle, vivid colors, no text'
-  );
   const img = new Image();
-  img.crossOrigin = 'anonymous';
   img.onload = () => uploadTexture(img);
-  img.src = `https://image.pollinations.ai/prompt/${prompt}?width=1024&height=1024&model=flux-realism&seed=42&nologo=true`;
+  img.src = 'default-bg.avif';
 }
 
 function getCityFromTimezone() {
