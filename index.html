@@ -673,7 +673,13 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 let penActive = true, penDrawing = false, lastPX = 0, lastPY = 0;
-let brushR = 32;
+const _w = window.innerWidth;
+let brushR = _w < 768 ? Math.round(32 / 2) : _w < 1024 ? Math.round(32 / 1.5) : 32;
+{
+  const norm = (brushR - 10) / 110;
+  document.getElementById('brushSize').value = norm.toFixed(3);
+  document.getElementById('v_brushR').textContent = norm.toFixed(1);
+}
 
 function paintBrush(x, y, px, py) {
   const dist  = Math.hypot(x - px, y - py);
