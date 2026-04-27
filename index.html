@@ -34,6 +34,12 @@
         <input type="range" id="sDens" min="0" max="1" step="0.01" value="0.35">
         <span class="cval" id="v_sDens">0.4</span>
       </div>
+      <div class="crow">
+        <div class="cicon-wrap" data-i18n="bg-blur"><i data-lucide="cloud" class="cicon"></i></div>
+        <span class="clabel"><span class="zh">模糊</span><span class="en">Blur</span></span>
+        <input type="range" id="bgBlur" min="0" max="1" step="0.01" value="0.65">
+        <span class="cval" id="v_bgBlur">0.7</span>
+      </div>
       <div class="sep"></div>
       <div class="toggle-row">
         <span class="toggle-name">
@@ -54,13 +60,6 @@
 
     <!-- Visual controls -->
     <div id="tab-visual">
-      <div class="crow">
-        <div class="cicon-wrap" data-i18n="bg-blur"><i data-lucide="cloud" class="cicon"></i></div>
-        <span class="clabel"><span class="zh">模糊</span><span class="en">Blur</span></span>
-        <input type="range" id="bgBlur" min="0" max="1" step="0.01" value="0.65">
-        <span class="cval" id="v_bgBlur">0.7</span>
-      </div>
-      <div class="sep"></div>
       <div class="toggle-row">
         <span class="toggle-name">
           <i data-lucide="pen-line" class="toggle-icon"></i>
@@ -760,7 +759,7 @@ function setGenerating(on) {
   genBtn.disabled = on;
   genBtn.innerHTML = on
     ? '<span class="spinner"></span>生成中…'
-    : btnHTML('btn-generate');
+    : getLabel('btn-generate');
 }
 
 function setStatus(msg, isError) {
@@ -872,11 +871,11 @@ muteBtn.addEventListener('click', () => {
   audioMuted = !audioMuted;
   if (audioMuted) {
     audioCtx.suspend();
-    muteBtn.innerHTML = btnHTML('btn-unmute');
+    muteBtn.innerHTML = getLabel('btn-unmute');
     muteBtn.style.opacity = '0.6';
   } else {
     audioCtx.resume();
-    muteBtn.innerHTML = btnHTML('btn-mute');
+    muteBtn.innerHTML = getLabel('btn-mute');
     muteBtn.style.opacity = '';
   }
 });
