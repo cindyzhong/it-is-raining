@@ -861,81 +861,112 @@ function setStatus(msg, isError) {
 }
 
 // ——— Audio Engine ———
-let audioCtx = null, masterGain = null, rainGain = null, rainFilter = null;
+// The rain is a real recording (rain + thunder) played by an <audio>
+// element. A real, audibly-playing media element keeps going when the
+// screen locks / the app is backgrounded — iOS included — and shows
+// lock-screen controls. The generated white-noise loop further down is
+// kept only as a fallback if the recording fails to load.
+const RAIN_FILE = 'prem_adhikary-rain-and-thunder-176105.mp3';
+let bgAudio = null, fallbackURL = null;
 let audioMuted = false, audioStarted = false;
-let thunderTimeout = null;
 
 function initAudio() {
   if (audioStarted) return;
   audioStarted = true;
-  audioCtx   = new (window.AudioContext || window.webkitAudioContext)();
-  masterGain = audioCtx.createGain();
-  masterGain.gain.value = parseFloat(document.getElementById('audioVol').value);
-  masterGain.connect(audioCtx.destination);
 
-  rainGain = audioCtx.createGain();
-  rainGain.connect(masterGain);
-
-  rainFilter = audioCtx.createBiquadFilter();
-  rainFilter.type = 'bandpass';
-  rainFilter.frequency.value = 600;
-  rainFilter.Q.value = 1.5;
-  rainFilter.connect(rainGain);
-
-  const bufLen   = audioCtx.sampleRate * 2;
-  const noiseBuf = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
-  const data     = noiseBuf.getChannelData(0);
-  for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
-
-  const src = audioCtx.createBufferSource();
-  src.buffer = noiseBuf;
-  src.loop   = true;
-  src.connect(rainFilter);
-  src.start();
-
-  syncAudioToRain();
-  scheduleThunder();
+  bgAudio = new Audio();
+  bgAudio.loop = true;
+  bgAudio.preload = 'auto';
+  bgAudio.src = RAIN_FILE;
+  bgAudio.addEventListener('error', useFallbackLoop, { once: true });
+  bgAudio.play().catch(() => {});
+  applyRainVolume();
+  setupMediaSession();
 }
 
-function syncAudioToRain() {
-  if (!audioCtx) return;
-  rainGain.gain.setTargetAtTime((params.speed / 3) * 0.8, audioCtx.currentTime, 0.3);
-  rainFilter.frequency.setTargetAtTime(400 + params.rDens * 500, audioCtx.currentTime, 0.3);
+// Volume: .volume works on desktop / Android; iOS ignores it (the
+// recording plays at system volume there — use the hardware buttons),
+// so .muted is also set to honour a real zero / the mute button.
+function applyRainVolume() {
+  if (!bgAudio) return;
+  const vol = parseFloat(document.getElementById('audioVol').value);
+  bgAudio.volume = vol;
+  bgAudio.muted  = audioMuted || vol === 0;
 }
 
-function scheduleThunder() {
-  if (!audioCtx) return;
-  clearTimeout(thunderTimeout);
-  if (params.speed === 0) { thunderTimeout = setTimeout(scheduleThunder, 5000); return; }
-  const fast = params.speed >= 2;
-  const minMs = fast ? 10000 : 25000;
-  const maxMs = fast ? 25000 : 60000;
-  thunderTimeout = setTimeout(() => { playThunder(); scheduleThunder(); },
-                               minMs + Math.random() * (maxMs - minMs));
+// If the recording can't load, swap in a generated white-noise rain loop.
+function useFallbackLoop() {
+  if (!bgAudio) return;
+  fallbackURL = renderRainLoopURL();
+  bgAudio.src = fallbackURL;
+  bgAudio.play().catch(() => {});
 }
 
-function playThunder() {
-  if (!audioCtx || audioMuted) return;
-  const t      = audioCtx.currentTime;
-  const bufLen = audioCtx.sampleRate * 4;
-  const buf    = audioCtx.createBuffer(1, bufLen, audioCtx.sampleRate);
-  const d      = buf.getChannelData(0);
-  for (let i = 0; i < bufLen; i++) d[i] = Math.random() * 2 - 1;
+// Encode mono Float32 samples as a 16-bit PCM WAV Blob (no external file).
+function encodeWAV(samples, sr) {
+  const buf = new ArrayBuffer(44 + samples.length * 2);
+  const v = new DataView(buf);
+  const str = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, 'RIFF');  v.setUint32(4, 36 + samples.length * 2, true);  str(8, 'WAVE');
+  str(12, 'fmt '); v.setUint32(16, 16, true);  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);  v.setUint32(24, sr, true);  v.setUint32(28, sr * 2, true);
+  v.setUint16(32, 2, true);  v.setUint16(34, 16, true);
+  str(36, 'data'); v.setUint32(40, samples.length * 2, true);
+  for (let i = 0, o = 44; i < samples.length; i++, o += 2) {
+    const s = Math.max(-1, Math.min(1, samples[i]));
+    v.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+  return new Blob([buf], { type: 'audio/wav' });
+}
 
-  const src = audioCtx.createBufferSource();
-  src.buffer = buf;
+// Synchronously render a seamless looping rain WAV and return a blob URL.
+// Pure JS (white noise -> band-pass biquad) so it is ready within the
+// first user gesture — no async OfflineAudioContext, no network file.
+function renderRainLoopURL() {
+  const sr = 44100, dur = 10, xf = 0.5;
+  const total = Math.floor(sr * (dur + xf));
 
-  const lpf = audioCtx.createBiquadFilter();
-  lpf.type = 'lowpass';
-  lpf.frequency.value = 120;
+  // RBJ band-pass biquad — same shape as the WebAudio 'bandpass' filter.
+  const f0 = 400 + params.rDens * 500, Q = 1.5;
+  const w0 = 2 * Math.PI * f0 / sr;
+  const cw = Math.cos(w0), alpha = Math.sin(w0) / (2 * Q);
+  const a0 = 1 + alpha;
+  const b0 = alpha / a0, b2 = -alpha / a0;
+  const a1 = (-2 * cw) / a0, a2 = (1 - alpha) / a0;
 
-  const env = audioCtx.createGain();
-  env.gain.setValueAtTime(0.0001, t);
-  env.gain.exponentialRampToValueAtTime(0.6, t + 0.1);
-  env.gain.exponentialRampToValueAtTime(0.0001, t + 3.5);
+  const y = new Float32Array(total);
+  let x1 = 0, x2 = 0, y1 = 0, y2 = 0, peak = 1e-6;
+  for (let i = 0; i < total; i++) {
+    const xn = Math.random() * 2 - 1;
+    const yn = b0 * xn + b2 * x2 - a1 * y1 - a2 * y2;
+    x2 = x1; x1 = xn; y2 = y1; y1 = yn;
+    y[i] = yn;
+    if (Math.abs(yn) > peak) peak = Math.abs(yn);
+  }
+  const norm = 0.8 / peak;
 
-  src.connect(lpf); lpf.connect(env); env.connect(masterGain);
-  src.start(t); src.stop(t + 4);
+  // Crossfade the tail back into the head -> a click-free seamless loop.
+  const outLen = Math.floor(sr * dur);
+  const xn     = Math.floor(sr * xf);
+  const out    = new Float32Array(outLen);
+  for (let i = 0; i < outLen; i++) out[i] = y[i] * norm;
+  for (let i = 0; i < xn; i++) {
+    const f = i / xn;
+    out[i] = (y[i] * f + y[outLen + i] * (1 - f)) * norm;
+  }
+  return URL.createObjectURL(encodeWAV(out, sr));
+}
+
+function setupMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title:  document.title,
+      artist: 'itisraining.com',
+    });
+  } catch (e) {}
+  navigator.mediaSession.setActionHandler('play',  () => setMuted(false));
+  navigator.mediaSession.setActionHandler('pause', () => setMuted(true));
 }
 
 // Start audio on first user gesture (browser autoplay policy)
@@ -947,31 +978,26 @@ function onFirstInteraction() {
 document.addEventListener('click',  onFirstInteraction);
 document.addEventListener('input',  onFirstInteraction);
 
-// Sync rain sound when speed or density changes
-document.getElementById('speed').addEventListener('input', syncAudioToRain);
-
 // Volume slider
 document.getElementById('audioVol').addEventListener('input', () => {
   const vol = parseFloat(document.getElementById('audioVol').value);
   document.getElementById('v_vol').textContent = vol.toFixed(1);
-  if (masterGain) masterGain.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.1);
+  applyRainVolume();
 });
 
-// Mute toggle
+// Mute toggle — also drives the lock-screen play/pause control
 const muteBtn = document.getElementById('muteBtn');
-muteBtn.addEventListener('click', () => {
-  initAudio();
-  audioMuted = !audioMuted;
-  if (audioMuted) {
-    audioCtx.suspend();
-    muteBtn.innerHTML = getLabel('btn-unmute');
-    muteBtn.style.opacity = '0.6';
-  } else {
-    audioCtx.resume();
-    muteBtn.innerHTML = getLabel('btn-mute');
-    muteBtn.style.opacity = '';
+function setMuted(m) {
+  if (!audioStarted) initAudio();
+  audioMuted = m;
+  applyRainVolume();
+  muteBtn.innerHTML = getLabel(audioMuted ? 'btn-unmute' : 'btn-mute');
+  muteBtn.style.opacity = audioMuted ? '0.6' : '';
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.playbackState = audioMuted ? 'paused' : 'playing';
   }
-});
+}
+muteBtn.addEventListener('click', () => setMuted(!audioMuted));
 
 // ——— Collapse panel ———
 let collapsed = false;
