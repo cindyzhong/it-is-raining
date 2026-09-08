@@ -44,6 +44,11 @@ and `npx wrangler dev`, then use its local URL in bottles-config.js.
   table. Selection is approximate, not uniformly random, and repeats are possible.
 - Moderation: in Cloudflare's D1 console, set `hidden=1` on a bottle or reply to
   hide it. Set it back to 0 to restore. No admin UI or automatic moderation.
+- Admin dashboard: `/admin` is served by the Worker and checks the
+  `Cf-Access-Authenticated-User-Email` header for `x3zhong@gmail.com`. Create a
+  Cloudflare Access self-hosted application for `rain-bottles.x3zhong.workers.dev/admin*`,
+  choose Google as the login identity provider, and add only
+  `x3zhong@gmail.com` to the Access policy. Do this before sharing the admin URL.
 - No account recovery, cross-device sync, notifications, or deletion UI in v1.
 
 ## Checks

@@ -6,22 +6,42 @@ export default {
   async fetch(request, env) {
     const origin = request.headers.get('Origin');
     const allowed = env.ALLOWED_ORIGINS.split(',');
-    if (!allowed.includes(origin)) return json({ error: 'Origin not allowed.' }, 403);
+    const pathname = new URL(request.url).pathname;
+    if (!pathname.startsWith('/admin') && !allowed.includes(origin)) return json({ error: 'Origin not allowed.' }, 403);
     let response;
     try { response = request.method === 'OPTIONS' ? new Response(null, { status: 204 }) : await route(request, env); }
     catch (error) { console.error('Bottle request failed', error.message); response = json({ error: 'The bottles are resting. Please try again later.' }, 503); }
-    response.headers.set('Access-Control-Allow-Origin', origin);
-    response.headers.set('Vary', 'Origin');
-    response.headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    if (origin) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+      response.headers.set('Vary', 'Origin');
+      response.headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    }
     return response;
   }
 };
 async function route(request, env) {
+  const path = new URL(request.url).pathname;
+  const adminEmail = request.headers.get('Cf-Access-Authenticated-User-Email');
+  if (path === '/admin' || path === '/admin/' || path.startsWith('/admin/')) {
+    if (adminEmail?.toLowerCase() !== env.ADMIN_EMAIL.toLowerCase()) return json({ error: 'Administrator access required.' }, 403);
+    if (path === '/admin' || path === '/admin/') return adminPage();
+    if (request.method === 'GET' && path === '/admin/messages') {
+      const { results: bottles } = await env.DB.prepare('SELECT id,name,message,created_at,hidden FROM bottles ORDER BY created_at DESC LIMIT 500').all();
+      const { results: replies } = await env.DB.prepare('SELECT id,bottle_id,name,message,created_at,hidden FROM replies ORDER BY created_at DESC LIMIT 1000').all();
+      return json({ bottles, replies });
+    }
+    const hide = path.match(/^\/admin\/(bottles|replies)\/([a-f0-9-]{36})$/);
+    if (request.method === 'POST' && hide) {
+      const body = await request.json();
+      await env.DB.prepare(`UPDATE ${hide[1]} SET hidden=? WHERE id=?`).bind(body.hidden ? 1 : 0, hide[2]).run();
+      return json({ ok: true });
+    }
+    return json({ error: 'Not found.' }, 404);
+  }
   const token = (request.headers.get('Authorization') || '').replace(/^Bearer /, '');
   if (!/^[a-f0-9]{64}$/.test(token)) return json({ error: 'A browser identity is required.' }, 401);
   const owner = await hash(token);
-  const path = new URL(request.url).pathname;
   const db = env.DB;
   if (request.method === 'GET' && path === '/bottles/random') {
     const pivot = Math.random();
@@ -76,4 +96,12 @@ async function route(request, env) {
     await db.prepare('INSERT INTO bottles(id,owner,name,message,created_at,random_key) VALUES(?,?,?,?,?,?)').bind(id, owner, name, message, now, Math.random()).run();
   }
   return json({ id }, 201);
+}
+
+function adminPage() {
+  return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Rain bottles admin</title><style>body{margin:0;background:#101114;color:#eee;font:14px system-ui;padding:28px}main{max-width:900px;margin:auto}h1{font-weight:400}.muted{color:#999}.item{border:1px solid #ffffff24;border-radius:12px;padding:14px;margin:10px 0;background:#ffffff08}.msg{white-space:pre-wrap;margin:8px 0;line-height:1.6}.meta{color:#aaa;font-size:12px}.reply{margin-left:24px;border-left:2px solid #ffffff55}.actions button{margin-right:8px;padding:6px 10px;border:1px solid #ffffff44;border-radius:7px;background:#ffffff12;color:#fff;cursor:pointer}.hidden{opacity:.45}</style><main><h1>Rain bottles</h1><p class="muted">管理员：x3zhong@gmail.com · <button id="reload">刷新</button></p><p id="status" class="muted"></p><section id="list"></section></main><script>
+const list=document.querySelector('#list'),status=document.querySelector('#status');
+const esc=s=>String(s??'');
+async function load(){status.textContent='Loading…';const r=await fetch('/admin/messages');if(!r.ok){status.textContent='Access denied. Sign in with the administrator Google account.';return}const d=await r.json();const replies=new Map();d.replies.forEach(x=>(replies.get(x.bottle_id)||replies.set(x.bottle_id,[]).get(x.bottle_id)).push(x));list.replaceChildren();d.bottles.forEach(b=>{const el=document.createElement('article');el.className='item '+(b.hidden?'hidden':'');el.innerHTML='<div class="meta">'+new Date(b.created_at).toLocaleString()+' · '+(esc(b.name)||'匿名')+'</div><div class="msg"></div><div class="actions"><button data-kind="bottles" data-id="'+b.id+'">'+(b.hidden?'Restore':'Hide')+'</button></div>';el.querySelector('.msg').textContent=b.message;(replies.get(b.id)||[]).forEach(x=>{const r=document.createElement('div');r.className='item reply '+(x.hidden?'hidden':'');r.innerHTML='<div class="meta">回复 · '+new Date(x.created_at).toLocaleString()+' · '+(esc(x.name)||'匿名')+'</div><div class="msg"></div><div class="actions"><button data-kind="replies" data-id="'+x.id+'">'+(x.hidden?'Restore':'Hide')+'</button></div>';r.querySelector('.msg').textContent=x.message;el.append(r)});list.append(el)});status.textContent=d.bottles.length+' bottles · '+d.replies.length+' replies'}
+list.addEventListener('click',async e=>{if(!e.target.matches('button[data-id]'))return;await fetch('/admin/'+e.target.dataset.kind+'/'+e.target.dataset.id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hidden:e.target.textContent==='Hide'})});load()});document.querySelector('#reload').onclick=load;load();</script>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
