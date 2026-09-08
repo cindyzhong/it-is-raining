@@ -21,8 +21,27 @@
       <path d="m21 32 6-1m-5 5 6-1" stroke="#a58961" stroke-linecap="round"/>
       <path d="M14 33v9M21 14v6" stroke="#e4fff3" stroke-width="2" stroke-linecap="round" opacity=".75"/>
     </g>
-  </svg><span class="bottle-launcher-label">漂流瓶<span>Bottles</span></span>`;
+  </svg><span class="bottle-badge" hidden aria-hidden="true"></span>`;
   launcher.setAttribute('aria-haspopup', 'dialog');
+  launcher.title = '漂流瓶 · Bottles';
+  const badge = launcher.querySelector('.bottle-badge');
+  let unreadCount = 0, checking = false;
+  function updateBadge(count) {
+    unreadCount = count;
+    badge.hidden = count === 0;
+    badge.textContent = count > 99 ? '99+' : String(count);
+    launcher.title = count ? `${count} 条新回复 · New replies` : '漂流瓶 · Bottles';
+    launcher.setAttribute('aria-label', launcher.title);
+  }
+  async function checkUnread() {
+    if (!state || checking || document.hidden || busy) return;
+    checking = true;
+    try {
+      const { replies } = await request('/bottles/mine');
+      updateBadge(replies.filter(r => r.created_at > (state.seen || 0)).length);
+    } catch { /* Keep the last known badge during a temporary network failure. */ }
+    finally { checking = false; }
+  }
   const dialog = document.createElement('dialog'); dialog.className = 'bottle-dialog';
   dialog.setAttribute('aria-labelledby', 'bottle-title');
   dialog.innerHTML = `<header><div><p class="bottle-eyebrow">LET A LITTLE KINDNESS DRIFT</p><h2 id="bottle-title">雨中的漂流瓶</h2></div><button type="button" class="bottle-close" aria-label="Close">×</button></header>
@@ -104,6 +123,7 @@
       else { content.append(card(bottle)); content.append(bottle.replied ? text('p', '你已经回复过这个瓶子。You’ve replied to this bottle.', 'bottle-note') : form(bottle)); }
       const next = text('button', '再捞一个 · Find another'); next.className = 'bottle-next'; next.onclick = () => run(() => view('pick')); content.append(next);
     } else {
+      const checkedAt = Date.now();
       const { bottles, replies } = await request('/bottles/mine');
       const unread = replies.filter(r => r.created_at > (state.seen || 0)).length;
       status.textContent = unread ? `${unread} 条新回复 · new replies` : 'Your latest 50 bottles · 最近的瓶子';
@@ -115,14 +135,18 @@
         if (!received.length) article.append(text('p', '还在漂流，等待回音。Waiting for a reply.', 'bottle-note'));
         if (demo && !received.length) {
           const simulate = text('button', 'Preview a received reply');
-          simulate.onclick = () => run(async () => { state.replies.push({ id: crypto.randomUUID(), bottle_id: bottle.id, name: 'Demo visitor', message: '收到你的瓶子了。愿你今晚有个好梦。', created_at: Date.now() }); save(); await view('mine'); }); article.append(simulate);
+          simulate.onclick = () => run(async () => { state.replies.push({ id: crypto.randomUUID(), bottle_id: bottle.id, name: 'Demo visitor', message: '收到你的瓶子了。愿你今晚有个好梦。', created_at: Date.now() }); save(); dialog.close(); updateBadge(state.replies.filter(r => state.bottles.some(b => b.id === r.bottle_id) && r.created_at > (state.seen || 0)).length); }); article.append(simulate);
         }
         content.append(article);
       }
-      state.seen = Date.now(); save();
+      state.seen = checkedAt; save(); updateBadge(0);
     }
   }
-  launcher.onclick = () => { dialog.showModal(); if (!state) { status.textContent = 'Please allow browser storage to keep your bottles and replies.'; return; } run(() => view('pick')); };
+  launcher.onclick = () => { dialog.showModal(); if (!state) { status.textContent = 'Please allow browser storage to keep your bottles and replies.'; return; } run(() => view(unreadCount ? 'mine' : 'pick')); };
   dialog.querySelector('.bottle-close').onclick = () => dialog.close();
   dialog.querySelectorAll('nav button').forEach(button => button.onclick = () => { if (state) run(() => view(button.dataset.view)); });
+  checkUnread();
+  setInterval(checkUnread, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUnread(); });
+  window.addEventListener('focus', checkUnread);
 })();

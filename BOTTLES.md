@@ -36,7 +36,8 @@ and `npx wrangler dev`, then use its local URL in bottles-config.js.
   Another browser/new identity can bypass this casual visitor limit.
 - Replies are only returned to the bottle author. No reply threads or emails.
 - Mine displays the latest 50 bottles and up to 200 recent replies. New labels
-  appear when Mine is opened; there is no background polling.
+  appear when Mine is opened. The bottle badge checks on page load, focus, and
+  every 60 seconds while the page is visible. Clicking an unread badge opens Mine.
 - Writes limited to 20 attempts/hour per identity and per hashed IP (shared
   networks share that limit). CORS is not an anti-bot control. For a wider public
   launch, consider Turnstile if spam becomes a problem.
