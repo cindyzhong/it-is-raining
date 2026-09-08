@@ -15,3 +15,4 @@
 .bottle-badge{position:absolute;right:0;top:2px;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#dd796c;color:#fff;font:600 11px/20px system-ui;text-align:center;box-shadow:0 2px 7px #0003;pointer-events:none}
 .bottle-badge[hidden]{display:none}
 .bottle-optional{font-size:10px;color:#ffffff80;margin-left:4px}
+.bottle-replies{display:flex;flex-direction:column;gap:5px;margin:4px 0 12px}.bottle-reply{margin:0;padding:8px 10px;border-left:2px solid #ffffff66;border-radius:7px;background:#ffffff08}.bottle-reply .bottle-message{font-size:12px;line-height:1.45;margin:0}.bottle-reply .bottle-author{display:inline;margin:4px 8px 0 0;font-size:10px}.bottle-reply .bottle-date{font-size:9px}.bottle-more{width:100%;margin:2px 0 10px;font-size:11px!important;padding:7px!important}
