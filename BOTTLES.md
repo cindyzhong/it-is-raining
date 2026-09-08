@@ -31,14 +31,12 @@ and `npx wrangler dev`, then use its local URL in bottles-config.js.
 
 - Nickname: 1–24 Unicode code points; message/reply: 1–300. Browser maxlength may
   be stricter for emoji. Plain text only.
-- Browser generates a 256-bit secret, stored locally. Server stores its SHA-256
-  hash; it never uses the nickname as identity. Clearing storage loses access.
-- One reply per bottle per identity, enforced by a database unique constraint.
-  Another browser/new identity can bypass this casual visitor limit.
-- Replies are only returned to the bottle author. No reply threads or emails.
-- Mine displays the latest 50 bottles and up to 200 recent replies. New labels
-  appear when Mine is opened. The bottle badge checks on page load, focus, and
-  every 60 seconds while the page is visible. Clicking an unread badge opens Mine.
+- Browser generates a 256-bit temporary secret in memory. It is never stored in
+  localStorage; refreshing the page creates a new identity.
+- One reply per bottle per page identity is enforced by a database unique
+  constraint. Refreshing creates a new identity and allows another reply.
+- Every random bottle includes all visible replies. There is no personal inbox,
+  read history, unread badge, or cross-device recovery.
 - Writes limited to 20 attempts/hour per identity and per hashed IP (shared
   networks share that limit). CORS is not an anti-bot control. For a wider public
   launch, consider Turnstile if spam becomes a problem.

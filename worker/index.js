@@ -25,16 +25,16 @@ async function route(request, env) {
   const db = env.DB;
   if (request.method === 'GET' && path === '/bottles/random') {
     const pivot = Math.random();
-    const query = `SELECT id,name,message,created_at FROM bottles WHERE hidden=0 AND owner!=? AND random_key>=? ORDER BY random_key LIMIT 1`;
-    let bottle = await db.prepare(query).bind(owner, pivot).first();
-    if (!bottle) bottle = await db.prepare(query).bind(owner, 0).first();
-    if (bottle) bottle.replied = !!await db.prepare('SELECT id FROM replies WHERE bottle_id=? AND owner=?').bind(bottle.id, owner).first();
+    const query = `SELECT id,name,message,created_at FROM bottles WHERE hidden=0 AND random_key>=? ORDER BY random_key LIMIT 1`;
+    let bottle = await db.prepare(query).bind(pivot).first();
+    if (!bottle) bottle = await db.prepare(query).bind(0).first();
+    if (bottle) {
+      const { results: replies } = await db.prepare('SELECT id,name,message,created_at,owner FROM replies WHERE bottle_id=? AND hidden=0 ORDER BY created_at ASC').bind(bottle.id).all();
+      bottle.replies = replies.map(reply => ({ ...reply, replied: reply.owner === owner }));
+      bottle.replied = replies.some(reply => reply.owner === owner);
+      bottle.replies.forEach(reply => delete reply.owner);
+    }
     return json({ bottle });
-  }
-  if (request.method === 'GET' && path === '/bottles/mine') {
-    const { results: bottles } = await db.prepare('SELECT id,name,message,created_at FROM bottles WHERE owner=? AND hidden=0 ORDER BY created_at DESC LIMIT 50').bind(owner).all();
-    const { results: replies } = await db.prepare(`SELECT r.id,r.bottle_id,r.name,r.message,r.created_at FROM replies r JOIN bottles b ON b.id=r.bottle_id WHERE b.owner=? AND b.hidden=0 AND r.hidden=0 ORDER BY r.created_at DESC LIMIT 200`).bind(owner).all();
-    return json({ bottles, replies });
   }
   const replyMatch = path.match(/^\/bottles\/([a-f0-9-]{36})\/replies$/);
   if (request.method !== 'POST' || (path !== '/bottles' && !replyMatch)) return json({ error: 'Not found.' }, 404);
