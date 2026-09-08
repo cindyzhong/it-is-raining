@@ -2,7 +2,7 @@
   const api = (window.BOTTLES_API_URL || '').replace(/\/$/, '');
   const demo = !api;
   const state = { token: Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join(''), bottles: [], replies: [], name: '' };
-  const encouragements = ['雨滴是人类最早接触天空的方式。', '愿你在雨声里，找到一点不必解释的安静。', '有些路不需要地图，只需要慢慢走下去。', '今晚的风，替你把远方带近一点。', '愿你一直保留一点相信明天的力气。', '雨会经过屋檐，也会带走一点疲惫。'];
+  const encouragements = Array.isArray(window.RAIN_ENCOURAGEMENTS) && window.RAIN_ENCOURAGEMENTS.length ? window.RAIN_ENCOURAGEMENTS : ['雨会经过屋檐，也会带走一点疲惫。'];
   const launcher = document.createElement('button'); launcher.className = 'bottle-launcher'; launcher.setAttribute('aria-label', '漂流瓶 · Bottles'); launcher.setAttribute('aria-haspopup', 'dialog'); launcher.title = '漂流瓶 · Bottles';
   launcher.innerHTML = `<svg class="bottle-launcher-icon" viewBox="0 0 48 56" fill="none" aria-hidden="true"><g transform="rotate(14 24 28)"><rect x="19" y="3" width="10" height="8" rx="2" fill="#bc9566" stroke="#ead0a0"/><path d="M18 10h12v11c0 3 9 5 9 12v13c0 4-3 6-7 6H16c-4 0-7-2-7-6V33c0-7 9-9 9-12V10Z" fill="#ffffff" fill-opacity=".04" stroke="#ffffff" stroke-width="2"/><path d="M11 39c7-5 17 5 26 0v7c0 3-2 4-5 4H16c-3 0-5-1-5-4v-7Z" fill="#ffffff" fill-opacity=".08"/><rect x="18" y="27" width="13" height="18" rx="2" transform="rotate(-12 18 27)" fill="#f1dfb5"/><path d="m21 32 6-1m-5 5 6-1" stroke="#a58961" stroke-linecap="round"/><path d="M14 33v9M21 14v6" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".75"/></g></svg>`;
   const dialog = document.createElement('dialog'); dialog.className = 'bottle-dialog'; dialog.setAttribute('aria-labelledby', 'bottle-title');
