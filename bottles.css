@@ -14,3 +14,4 @@
 
 .bottle-badge{position:absolute;right:0;top:2px;min-width:20px;height:20px;padding:0 5px;border-radius:12px;background:#dd796c;color:#fff;font:600 11px/20px system-ui;text-align:center;box-shadow:0 2px 7px #0003;pointer-events:none}
 .bottle-badge[hidden]{display:none}
+.bottle-optional{font-size:10px;color:#ffffff80;margin-left:4px}

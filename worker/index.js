@@ -56,7 +56,7 @@ async function route(request, env) {
   try { body = JSON.parse(raw); } catch { return json({ error: 'Invalid message.' }, 400); }
   const name = typeof body?.name === 'string' ? body.name.trim() : '';
   const message = typeof body?.message === 'string' ? body.message.trim() : '';
-  if (!name || [...name].length > 24 || !message || [...message].length > 300) return json({ error: 'Use a nickname of 1–24 characters and a message of 1–300 characters.' }, 400);
+  if ([...name].length > 24 || !message || [...message].length > 300) return json({ error: 'Use an optional nickname of up to 24 characters and a message of 1–300 characters.' }, 400);
   if (replyMatch) {
     const bottle = await db.prepare('SELECT owner FROM bottles WHERE id=? AND hidden=0').bind(replyMatch[1]).first();
     if (!bottle) return json({ error: 'This bottle is no longer available.' }, 404);

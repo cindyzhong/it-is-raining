@@ -10,9 +10,8 @@ async function call(path, who = 'a', body, origin = 'http://localhost:8080') {
 }
 assert.equal((await call('/bottles/random', 'a', undefined, 'https://evil.test')).status, 403);
 assert.equal((await call('/bottles/random', 'x')).status, 401);
-assert.equal((await call('/bottles', 'a', {name:' ',message:'test'})).status, 400);
 assert.equal((await call('/bottles', 'a', {name:'A',message:'x'.repeat(301)})).status, 400);
-const created = await call('/bottles', 'a', { name:'A', message:'你好 🌧️ <script>' }); assert.equal(created.status,201);
+const created = await call('/bottles', 'a', { name:' ', message:'你好 🌧️ <script>' }); assert.equal(created.status,201);
 const {id} = await created.json();
 assert.equal((await (await call('/bottles/random')).json()).bottle,null);
 assert.equal((await (await call('/bottles/random','b')).json()).bottle.id,id);

@@ -9,6 +9,14 @@
     localStorage.setItem(key, JSON.stringify(state));
   } catch { state = null; }
   const save = () => localStorage.setItem(key, JSON.stringify(state));
+  const encouragements = [
+    '雨滴是人类最早接触天空的方式。',
+    '愿你在雨声里，找到一点不必解释的安静。',
+    '有些路不需要地图，只需要慢慢走下去。',
+    '今晚的风，替你把远方带近一点。',
+    '愿你一直保留一点相信明天的力气。',
+    '雨会经过屋檐，也会带走一点疲惫。'
+  ];
   const launcher = document.createElement('button');
   launcher.className = 'bottle-launcher';
   launcher.setAttribute('aria-label', '漂流瓶 · Bottles');
@@ -80,7 +88,7 @@
   const text = (tag, value, className) => { const el = document.createElement(tag); el.textContent = value; if (className) el.className = className; return el; };
   function card(item) {
     const article = document.createElement('article'); article.className = 'bottle-card';
-    article.append(text('p', item.message, 'bottle-message'), text('p', '— ' + item.name, 'bottle-author'), text('time', new Date(item.created_at).toLocaleDateString(), 'bottle-date'));
+    article.append(text('p', item.message, 'bottle-message'), text('p', '— ' + (item.name || '匿名 · Anonymous'), 'bottle-author'), text('time', new Date(item.created_at).toLocaleDateString(), 'bottle-date'));
     return article;
   }
   async function run(action) {
@@ -93,13 +101,13 @@
   }
   function form(bottle) {
     const el = document.createElement('form'); el.className = 'bottle-form';
-    el.innerHTML = `<label>你的名字 · Nickname<input name="nickname" required maxlength="24" autocomplete="nickname" placeholder="听雨的人"></label><label>${bottle ? '回一句 · A reply' : '想说的话 · Your message'}<textarea name="message" required maxlength="300" rows="4" placeholder="此刻，你想说些什么？"></textarea></label><p class="bottle-note">${bottle ? 'Only the bottle’s author can read your reply. One reply per browser.' : 'Your bottle can be found by other visitors.'}</p><button class="bottle-primary" type="submit">${bottle ? '寄出回复 · Send reply' : '让它漂走 · Release'}</button>`;
+    el.innerHTML = `<label>你的名字 · Nickname <span class="bottle-optional">可选 · Optional</span><input name="nickname" maxlength="24" autocomplete="nickname" placeholder="不填写则显示匿名 · Anonymous"></label><label>${bottle ? '回一句 · A reply' : '想说的话 · Your message'}<textarea name="message" required maxlength="300" rows="4" placeholder="此刻，你想说些什么？"></textarea></label><p class="bottle-note">${bottle ? 'Only the bottle’s author can read your reply. One reply per browser.' : 'Your bottle can be found by other visitors.'}</p><button class="bottle-primary" type="submit">${bottle ? '寄出回复 · Send reply' : '让它漂走 · Release'}</button>`;
     el.elements.nickname.value = state.name || '';
     el.addEventListener('submit', event => {
       event.preventDefault();
       if (busy) return;
       const name = el.elements.nickname.value.trim(), message = el.elements.message.value.trim();
-      if (!name || !message) { status.textContent = 'Please enter a nickname and message.'; return; }
+      if (!message) { status.textContent = 'Please enter a message.'; return; }
       run(async () => {
         const button = el.querySelector('button'); button.disabled = true;
         try {
@@ -126,7 +134,7 @@
       const checkedAt = Date.now();
       const { bottles, replies } = await request('/bottles/mine');
       const unread = replies.filter(r => r.created_at > (state.seen || 0)).length;
-      status.textContent = unread ? `${unread} 条新回复 · new replies` : 'Your latest 50 bottles · 最近的瓶子';
+      status.textContent = unread ? `${unread} 条新回复 · new replies` : encouragements[Math.floor(Math.random() * encouragements.length)];
       if (!bottles.length) content.append(text('p', '还没有放出的瓶子。Write a little something first.', 'bottle-empty'));
       for (const bottle of bottles) {
         const article = card(bottle);
