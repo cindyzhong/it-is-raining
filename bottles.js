@@ -10,7 +10,18 @@
   } catch { state = null; }
   const save = () => localStorage.setItem(key, JSON.stringify(state));
   const launcher = document.createElement('button');
-  launcher.className = 'bottle-launcher'; launcher.textContent = '♧ 漂流瓶 · Bottles';
+  launcher.className = 'bottle-launcher';
+  launcher.setAttribute('aria-label', '漂流瓶 · Bottles');
+  launcher.innerHTML = `<svg class="bottle-launcher-icon" viewBox="0 0 48 56" fill="none" aria-hidden="true">
+    <g transform="rotate(14 24 28)">
+      <rect x="19" y="3" width="10" height="8" rx="2" fill="#bc9566" stroke="#ead0a0"/>
+      <path d="M18 10h12v11c0 3 9 5 9 12v13c0 4-3 6-7 6H16c-4 0-7-2-7-6V33c0-7 9-9 9-12V10Z" fill="#8ed8bd" fill-opacity=".25" stroke="#bdebd5" stroke-width="2"/>
+      <path d="M11 39c7-5 17 5 26 0v7c0 3-2 4-5 4H16c-3 0-5-1-5-4v-7Z" fill="#76c7b2" fill-opacity=".35"/>
+      <rect x="18" y="27" width="13" height="18" rx="2" transform="rotate(-12 18 27)" fill="#f1dfb5"/>
+      <path d="m21 32 6-1m-5 5 6-1" stroke="#a58961" stroke-linecap="round"/>
+      <path d="M14 33v9M21 14v6" stroke="#e4fff3" stroke-width="2" stroke-linecap="round" opacity=".75"/>
+    </g>
+  </svg><span class="bottle-launcher-label">漂流瓶<span>Bottles</span></span>`;
   launcher.setAttribute('aria-haspopup', 'dialog');
   const dialog = document.createElement('dialog'); dialog.className = 'bottle-dialog';
   dialog.setAttribute('aria-labelledby', 'bottle-title');
