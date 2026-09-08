@@ -1,2 +1,2 @@
-// Set this to your deployed Worker URL to enable shared bottles.
-window.BOTTLES_API_URL = '';
+// Shared bottle API hosted on Cloudflare Workers.
+window.BOTTLES_API_URL = 'https://rain-bottles.x3zhong.workers.dev';

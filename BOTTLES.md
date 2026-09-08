@@ -5,6 +5,7 @@ Branch: `codex/drift-bottles`. The original rain code stays on `main`.
 ## Preview
 
 Run `python3 -m http.server 8080` and open http://localhost:8080.
+The feature branch is configured to use `https://rain-bottles.x3zhong.workers.dev`.
 With an empty `BOTTLES_API_URL`, the UI is explicitly a local demo. Find uses sample
 bottles; Write saves local messages; Mine has a demo-only button to simulate an
 incoming reply. Nothing is shared. Demo messages are not uploaded when connected.

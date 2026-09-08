@@ -88,7 +88,7 @@
     busy = true; status.textContent = '漂流中… · One moment…';
     dialog.setAttribute('aria-busy', 'true');
     dialog.querySelectorAll('nav button').forEach(b => b.disabled = true);
-    try { await action(); } catch (error) { status.textContent = error.name === 'TimeoutError' ? 'Taking too long. Please try again.' : error.message; }
+    try { await action(); } catch (error) { status.textContent = error.name === 'TimeoutError' ? '连接超时，请稍后再试。Taking too long. Please try again.' : error instanceof TypeError ? '暂时无法连接漂流瓶，请稍后重试。Unable to connect. Please try again shortly.' : error.message; }
     finally { busy = false; dialog.removeAttribute('aria-busy'); dialog.querySelectorAll('nav button').forEach(b => b.disabled = false); }
   }
   function form(bottle) {

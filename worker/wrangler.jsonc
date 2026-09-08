@@ -3,5 +3,5 @@
   "main": "index.js",
   "compatibility_date": "2026-09-08",
   "vars": { "ALLOWED_ORIGINS": "https://itisraining.com,https://www.itisraining.com,http://localhost:8080,http://127.0.0.1:8080" },
-  "d1_databases": [{ "binding": "DB", "database_name": "rain-bottles", "database_id": "REPLACE_WITH_D1_DATABASE_ID", "migrations_dir": "migrations" }]
+  "d1_databases": [{ "binding": "DB", "database_name": "rain-bottles", "database_id": "ecd36243-1fe9-4f28-b956-d2446a9421dd", "migrations_dir": "migrations" }]
 }
