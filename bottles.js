@@ -49,7 +49,7 @@
     <p class="bottle-demo" ${demo ? '' : 'hidden'}>本地预览 · Demo — messages stay in this browser until Cloudflare is connected.</p>
     <nav aria-label="Bottles"><button data-view="pick">捞一个 · Find</button><button data-view="write">扔一个 · Write</button><button data-view="mine">我的瓶子 · Mine</button></nav>
     <p class="bottle-status" role="status" aria-live="polite"></p><section class="bottle-content"></section>
-    <p class="bottle-note">瓶子与回复在此浏览器中找回。清除浏览器数据会失去入口。<br>Return here for replies. No email or notifications while you’re away.</p>`;
+    <p class="bottle-note">回复会保存在这个浏览器里。清除浏览器数据或更换设备后，可能无法找回记录。<br>Replies are saved in this browser. Clearing browser data or switching devices may make your history unavailable.</p>`;
   document.body.append(launcher, dialog);
   const content = dialog.querySelector('.bottle-content');
   const status = dialog.querySelector('.bottle-status');
