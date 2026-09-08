@@ -1136,6 +1136,75 @@ function showPanel(id) {
   });
 }
 
+// The rain <audio> the user hears can't also feed the recorder: muting it
+// (or dragging the volume to 0) would silence the export too. So the export
+// gets its own element playing the same file, routed through WebAudio into a
+// MediaStreamDestination only — it never reaches the speakers, and it records
+// at a fixed level regardless of the mute button.
+let expAudioCtx = null;
+
+// Async on purpose: the element needs to be *actually playing* before the
+// recorder starts. Returning as soon as play() is called records a few
+// hundred bytes of silence while the file is still loading.
+async function makeExportAudioTrack() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    expAudioCtx = expAudioCtx || new AC();
+    if (expAudioCtx.state === 'suspended') await expAudioCtx.resume();
+
+    const el = new Audio();
+    el.loop    = true;
+    el.preload = 'auto';
+    // No seek to bgAudio.currentTime: on a server without range-request
+    // support that seek stalls the element and the export records silence.
+    el.src = (bgAudio && bgAudio.currentSrc) || fallbackURL || RAIN_FILE;
+
+    const src  = expAudioCtx.createMediaElementSource(el);
+    const gain = expAudioCtx.createGain();
+    gain.gain.value = 0.9;
+    const dest = expAudioCtx.createMediaStreamDestination();
+    src.connect(gain).connect(dest);
+
+    // Deliberately not awaited: on a stalled or slow load the play() promise
+    // never settles, which would wedge the export on "Start Recording"
+    // forever. Readiness is decided by the probe below instead.
+    el.play().catch(() => {});
+
+    // Poll the graph until real samples are flowing, so the recorder never
+    // starts against a silent stream. Caps out so a stalled load can't hang
+    // the export — it just falls back to a silent video.
+    const probe = expAudioCtx.createAnalyser();
+    probe.fftSize = 2048;
+    gain.connect(probe);
+    const buf = new Float32Array(probe.fftSize);
+    const t0  = performance.now();
+    let live  = false;
+    while (performance.now() - t0 < 6000) {
+      probe.getFloatTimeDomainData(buf);
+      let sum = 0;
+      for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+      if (Math.sqrt(sum / buf.length) > 0.005) { live = true; break; }
+      await new Promise(r => setTimeout(r, 50));
+    }
+    probe.disconnect();
+
+    const teardown = () => {
+      el.pause();
+      el.removeAttribute('src');
+      el.load();                       // abandon any in-flight request
+      try { src.disconnect(); gain.disconnect(); } catch (e) {}
+    };
+
+    const track = dest.stream.getAudioTracks()[0];
+    if (!track || !live) { teardown(); return null; }
+
+    return { track, stop: teardown };
+  } catch (e) {
+    return null;   // no audio available — fall back to a silent video
+  }
+}
+
 async function startExport() {
   const DURATION = 30;
   [recW, recH] = selectedFmt === 'tiktok' ? [1080, 1920] : [1920, 1080];
@@ -1145,22 +1214,29 @@ async function startExport() {
   expCtx = expCanvas.getContext('2d');
 
   const candidates = [
-    { mime: 'video/mp4;codecs=avc1.42E01E', ext: 'mp4' },
-    { mime: 'video/webm;codecs=vp9',        ext: 'webm' },
-    { mime: 'video/webm;codecs=vp8',        ext: 'webm' },
-    { mime: 'video/webm',                   ext: 'webm' },
+    { mime: 'video/mp4;codecs=avc1.42E01E,mp4a.40.2', ext: 'mp4'  },
+    { mime: 'video/webm;codecs=vp9,opus',             ext: 'webm' },
+    { mime: 'video/webm;codecs=vp8,opus',             ext: 'webm' },
+    { mime: 'video/webm',                             ext: 'webm' },
   ];
   const chosen = candidates.find(c => MediaRecorder.isTypeSupported(c.mime)) || candidates[3];
 
-  const stream = expCanvas.captureStream(60);
+  const stream   = expCanvas.captureStream(60);
+  const expAudio = await makeExportAudioTrack();   // resolves once audio is flowing
+  if (expAudio) stream.addTrack(expAudio.track);
+
   const recorder = new MediaRecorder(stream, {
     mimeType: chosen.mime,
     videoBitsPerSecond: 14_000_000,
+    audioBitsPerSecond: 128_000,
   });
 
   const chunks = [];
   recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
   recorder.onstop = () => {
+    if (expAudio) expAudio.stop();
+    stream.getTracks().forEach(t => t.stop());
+
     const blob = new Blob(chunks, { type: chosen.mime });
     const url = URL.createObjectURL(blob);
     const filename = `xiayule_${selectedFmt}_${Math.round(recordTime)}s.${chosen.ext}`;
@@ -1229,16 +1305,6 @@ async function startExport() {
 
 function stopRecordingManually() {
   if (activeRecorder && activeRecorder.state === 'recording') {
-    activeRecorder.stop();
-    clearInterval(countdownTimer);
-  }
-}
-
-
-</script>
-</body>
-</html>
-recording') {
     activeRecorder.stop();
     clearInterval(countdownTimer);
   }
