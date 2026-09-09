@@ -28,3 +28,27 @@ assert.equal((await call('/bottles','d',{name:'D',message:'limited'})).status,42
 sqlite.prepare('UPDATE bottles SET hidden=1 WHERE id=?').run(id);
 assert.equal((await call(`/bottles/${id}/replies`,'e',{name:'E',message:'hidden'})).status,404);
 console.log('Passed: validation, random discovery, all replies, reply uniqueness, no inbox endpoint, rate limit, hidden bottles.');
+const round = [];
+for (let i = 0; i < 20; i++) {
+  const response = await call('/bottles/random', 'b', { seen: round });
+  assert.equal(response.status, 200);
+  const { bottle, restarted } = await response.json();
+  assert.equal(restarted, false);
+  assert.ok(!round.includes(bottle.id));
+  round.push(bottle.id);
+}
+const restart = await (await call('/bottles/random', 'b', { seen: round })).json();
+assert.equal(restart.restarted, true);
+assert.ok(round.includes(restart.bottle.id));
+assert.notEqual(restart.bottle.id, round.at(-1));
+assert.equal((await call('/bottles/random', 'b', { seen: ['invalid'] })).status, 400);
+sqlite.exec('UPDATE bottles SET hidden=1');
+assert.equal((await (await call('/bottles/random', 'b', { seen: round })).json()).bottle, null);
+sqlite.prepare('UPDATE bottles SET hidden=0 WHERE id=?').run(round[0]);
+const single = await (await call('/bottles/random', 'b', { seen: [round[0]] })).json();
+assert.equal(single.bottle.id, round[0]);
+assert.equal(single.restarted, true);
+const preflight = await worker.fetch(new Request('http://test/bottles/random', { method: 'OPTIONS', headers: { Origin: 'http://localhost:8080', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'authorization,content-type' } }), { DB, ALLOWED_ORIGINS: 'http://localhost:8080' });
+assert.equal(preflight.status, 204);
+assert.equal(preflight.headers.get('Access-Control-Allow-Origin'), 'http://localhost:8080');
+console.log('Passed: full round without repeats, restart, no immediate repeat, invalid rounds, hidden/empty pool.');

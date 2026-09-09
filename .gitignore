@@ -5,6 +5,7 @@
 .claude/
 .vscode/
 .idea/
+.wrangler/
 
 # Environment / Secrets
 .env

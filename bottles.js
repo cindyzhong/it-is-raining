@@ -1,6 +1,7 @@
 (() => {
   const api = (window.BOTTLES_API_URL || '').replace(/\/$/, '');
   const demo = !api;
+  const seen = new Set();
   const state = { token: Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join(''), bottles: [], replies: [], name: '' };
   const encouragements = Array.isArray(window.RAIN_ENCOURAGEMENTS) && window.RAIN_ENCOURAGEMENTS.length ? window.RAIN_ENCOURAGEMENTS : ['雨会经过屋檐，也会带走一点疲惫。'];
   const launcher = document.createElement('button'); launcher.className = 'bottle-launcher'; launcher.setAttribute('aria-label', '漂流瓶 · Bottles'); launcher.setAttribute('aria-haspopup', 'dialog'); launcher.title = '漂流瓶 · Bottles';
@@ -11,8 +12,33 @@
   const content = dialog.querySelector('.bottle-content'), status = dialog.querySelector('.bottle-status'); let busy = false;
   const text = (tag, value, className) => { const el = document.createElement(tag); el.textContent = value; if (className) el.className = className; return el; };
   async function request(path, body) {
-    if (!demo) { const response = await fetch(api + path, { method: body ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + state.token, ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(12000) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Please try again later.'); return data; }
-    if (path === '/bottles/random') { const pool = state.bottles.length ? state.bottles : [{ id: 'demo-1', name: '听雨的人', message: '希望你今天也有一个可以安心发呆的角落。', created_at: Date.now() }, { id: 'demo-2', name: 'Somewhere', message: 'It is raining here too. Wherever you are, I hope tonight feels a little softer.', created_at: Date.now() }]; const bottle = { ...pool[Math.floor(Math.random() * pool.length)] }; bottle.replies = state.replies.filter(r => r.bottle_id === bottle.id); bottle.replied = bottle.replies.some(r => r.owner === state.token); return { bottle }; }
+    if (!demo) {
+      const controller = new AbortController();
+      let timedOut = false;
+      const timer = setTimeout(() => { timedOut = true; controller.abort(); }, 25000);
+      const payload = path === '/bottles/random' ? { seen: [...seen] } : body;
+      try {
+        const response = await fetch(api + path, { method: payload ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + state.token, ...(payload ? { 'Content-Type': 'application/json' } : {}) }, body: payload ? JSON.stringify(payload) : undefined, signal: controller.signal });
+        if (!response.headers.get('Content-Type')?.includes('application/json')) throw new Error('接口返回了非消息页面，请检查网络或登录拦截。Unexpected API response.');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Please try again later.');
+        if (path === '/bottles/random' && data.bottle) { if (data.restarted) seen.clear(); seen.add(data.bottle.id); }
+        return data;
+      } catch (error) {
+        if (timedOut) { const timeout = new Error('连接超时，请重试或切换 Wi-Fi / 移动数据。Connection timed out; try another network.'); timeout.name = 'NetworkTimeout'; throw timeout; }
+        throw error;
+      } finally { clearTimeout(timer); }
+    }
+    if (path === '/bottles/random') {
+      const pool = state.bottles.length ? state.bottles : [{ id: 'demo-1', name: '听雨的人', message: '希望你今天也有一个可以安心发呆的角落。', created_at: Date.now() }, { id: 'demo-2', name: 'Somewhere', message: 'It is raining here too. Wherever you are, I hope tonight feels a little softer.', created_at: Date.now() }];
+      let available = pool.filter(bottle => !seen.has(bottle.id));
+      if (!available.length) { const last = [...seen].pop(); seen.clear(); available = pool.filter(bottle => bottle.id !== last); if (!available.length) available = pool; }
+      const bottle = { ...available[Math.floor(Math.random() * available.length)] };
+      bottle.replies = state.replies.filter(r => r.bottle_id === bottle.id);
+      bottle.replied = bottle.replies.some(r => r.owner === state.token);
+      seen.add(bottle.id);
+      return { bottle };
+    }
     const item = { ...body, id: crypto.randomUUID(), created_at: Date.now(), owner: state.token }; if (path === '/bottles') state.bottles.push(item); else { item.bottle_id = path.split('/')[2]; if (state.replies.some(r => r.bottle_id === item.bottle_id && r.owner === state.token)) throw new Error('You have already replied to this bottle in this session.'); state.replies.push(item); } return item;
   }
   function card(item, reply = false) { const article = document.createElement('article'); article.className = reply ? 'bottle-card bottle-reply' : 'bottle-card'; article.append(text('p', item.message, 'bottle-message'), text('p', '— ' + (item.name || '匿名 · Anonymous'), 'bottle-author'), text('time', new Date(item.created_at).toLocaleDateString(), 'bottle-date')); return article; }

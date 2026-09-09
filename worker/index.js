@@ -43,18 +43,37 @@ async function route(request, env) {
   if (!/^[a-f0-9]{64}$/.test(token)) return json({ error: 'A browser identity is required.' }, 401);
   const owner = await hash(token);
   const db = env.DB;
-  if (request.method === 'GET' && path === '/bottles/random') {
+  if ((request.method === 'GET' || request.method === 'POST') && path === '/bottles/random') {
+    let seen = [];
+    if (request.method === 'POST') {
+      // A read-only POST keeps the current round out of URL-length limits.
+      const reader = request.body?.getReader();
+      if (!reader) return json({ error: 'Invalid round.' }, 400);
+      let raw = '', size = 0;
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.length;
+        if (size > 400000) { await reader.cancel(); return json({ error: 'Round too large. Refresh to start again.' }, 413); }
+        raw += decoder.decode(value, { stream: true });
+      }
+      try { seen = JSON.parse(raw + decoder.decode()).seen; } catch { return json({ error: 'Invalid round.' }, 400); }
+      if (!Array.isArray(seen) || seen.length > 10000 || seen.some(id => typeof id !== 'string' || !/^[a-f0-9-]{36}$/.test(id))) return json({ error: 'Invalid round.' }, 400);
+    }
     const pivot = Math.random();
-    const query = `SELECT id,name,message,created_at FROM bottles WHERE hidden=0 AND random_key>=? ORDER BY random_key LIMIT 1`;
-    let bottle = await db.prepare(query).bind(pivot).first();
-    if (!bottle) bottle = await db.prepare(query).bind(0).first();
+    const query = `SELECT id,name,message,created_at FROM bottles WHERE hidden=0 AND random_key>=? AND id NOT IN (SELECT value FROM json_each(?)) ORDER BY random_key LIMIT 1`;
+    const pick = async ids => await db.prepare(query).bind(pivot, JSON.stringify(ids)).first() || await db.prepare(query).bind(0, JSON.stringify(ids)).first();
+    let bottle = await pick(seen);
+    const restarted = !bottle && seen.length > 0;
+    if (restarted) bottle = await pick(seen.slice(-1)) || await pick([]);
     if (bottle) {
       const { results: replies } = await db.prepare('SELECT id,name,message,created_at,owner FROM replies WHERE bottle_id=? AND hidden=0 ORDER BY created_at ASC').bind(bottle.id).all();
       bottle.replies = replies.map(reply => ({ ...reply, replied: reply.owner === owner }));
       bottle.replied = replies.some(reply => reply.owner === owner);
       bottle.replies.forEach(reply => delete reply.owner);
     }
-    return json({ bottle });
+    return json({ bottle, restarted });
   }
   const replyMatch = path.match(/^\/bottles\/([a-f0-9-]{36})\/replies$/);
   if (request.method !== 'POST' || (path !== '/bottles' && !replyMatch)) return json({ error: 'Not found.' }, 404);

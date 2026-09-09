@@ -40,8 +40,13 @@ and `npx wrangler dev`, then use its local URL in bottles-config.js.
 - Writes limited to 20 attempts/hour per identity and per hashed IP (shared
   networks share that limit). CORS is not an anti-bot control. For a wider public
   launch, consider Turnstile if spam becomes a problem.
-- A random indexed pivot selects a bottle without scanning/sorting the whole
-  table. Selection is approximate, not uniformly random, and repeats are possible.
+- A random indexed pivot selects a bottle, excluding IDs seen in the current
+  page round. The read-only POST `/bottles/random` accepts `{ "seen": [...] }`;
+  a full round restarts automatically, avoiding an immediate repeat when possible.
+  GET remains compatible with older clients. Seen IDs stay in page memory; no
+  bottles are deleted. Up to 10,000 IDs fit in a round; refresh beyond that limit.
+- Requests use AbortController with a 25-second deadline for older browsers.
+  This does not fix networks that cannot reach the configured API hostname.
 - Moderation: in Cloudflare's D1 console, set `hidden=1` on a bottle or reply to
   hide it. Set it back to 0 to restore. No admin UI or automatic moderation.
 - Admin dashboard: `/admin` is served by the Worker and checks the
